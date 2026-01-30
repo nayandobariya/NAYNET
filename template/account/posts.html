@@ -1,0 +1,833 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Include Social Header -->
+{% include 'account/social_header.html' %}
+
+<div class="social-container layout-3-col">
+  <!-- Left Sidebar: Profile Summary -->
+  <div class="left-sidebar">
+    <div class="social-card profile-card">
+      <div class="profile-background"></div>
+      {% if user.profile_picture %}
+      <a href="{% url 'account:edit-profile' user.id %}">
+        <img src="{{ user.profile_picture.url }}" alt="Profile" class="profile-card-avatar">
+      </a>
+      {% else %}
+      <a href="{% url 'account:edit-profile' user.id %}">
+        <img src="{% static 'images/person_1.jpg' %}" alt="Profile" class="profile-card-avatar">
+      </a>
+      {% endif %}
+
+      <div class="profile-card-name">
+        <a href="{% url 'account:edit-profile' user.id %}" style="color: inherit; text-decoration: none;">
+          {{ user.first_name }} {{ user.last_name }}
+        </a>
+      </div>
+      <div class="profile-card-headline">
+        {{ user.role|title }}
+      </div>
+
+      <div class="profile-stats">
+        <div class="stat-row">
+          <span>Profile viewers</span>
+          <span class="stat-value">42</span>
+        </div>
+        <div class="stat-row">
+          <span>Connections</span>
+          <span class="stat-value">{{ user.get_connection_count|default:"0" }}</span>
+        </div>
+      </div>
+
+      <div class="my-items">
+        <i class="fas fa-bookmark"></i>
+        <span>My Items</span>
+      </div>
+    </div>
+
+    <!-- Groups/Recent Widget (Optional) -->
+    <div class="social-card" style="padding: 12px; font-size: 12px;">
+      <div style="font-weight: 600; margin-bottom: 8px;">Recent</div>
+      <div class="text-primary" style="margin-bottom: 4px;"><i class="fas fa-hashtag"></i> generic_topic</div>
+      <div class="text-primary"><i class="fas fa-users"></i> Web Developers Group</div>
+    </div>
+  </div>
+
+  <!-- Center Column: Feed -->
+  <div class="main-feed">
+    <!-- Create Post Widget -->
+    <div class="social-card create-post-widget">
+      <div class="cp-top">
+        {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" class="cp-avatar">
+        {% else %}
+        <img src="{% static 'images/person_1.jpg' %}" class="cp-avatar">
+        {% endif %}
+        <button class="cp-trigger" onclick="focusPostForm()">Start a post</button>
+      </div>
+      <div class="cp-options">
+        <button class="cp-btn" onclick="triggerPhotoUpload()"><i class="fas fa-image photo"></i> Photo</button>
+        <button class="cp-btn" onclick="showVideoInput()"><i class="fas fa-video video"></i> Video</button>
+        <button class="cp-btn" onclick="showEventInput()"><i class="fas fa-calendar-alt event"></i> Event</button>
+        <button class="cp-btn" onclick="focusPostForm()"><i class="fas fa-newspaper article"></i> Write article</button>
+      </div>
+
+      <form id="create-post-form" enctype="multipart/form-data"
+        style="display:none; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
+        {% csrf_token %}
+        <input type="hidden" name="post_type" id="post-type-input" value="photo">
+        <textarea class="form-control mb-3" id="post-content" name="content" rows="3"
+          placeholder="What do you want to talk about?"
+          style="border:none; resize:none; box-shadow:none; font-size: 16px;"></textarea>
+
+        <div id="video-url-area" class="mb-3" style="display:none;">
+          <input type="url" name="video_url" id="video-url-input" class="form-control form-control-sm"
+            placeholder="Paste YouTube/Video URL here...">
+        </div>
+
+        <div id="event-date-area" class="mb-3" style="display:none;">
+          <label class="small text-muted font-weight-bold">Event Start Time:</label>
+          <input type="datetime-local" name="event_date" id="event-date-input" class="form-control form-control-sm">
+        </div>
+
+        <div id="image-preview-area" class="mb-3" style="display:none;">
+          <div class="position-relative d-inline-block">
+            <img id="img-preview" src="" style="max-height: 250px; border-radius: 8px; border: 1px solid #eee;">
+            <div class="mt-2">
+              <button type="button" class="btn-remove-photo" onclick="clearImage()">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-2">
+          <input type="file" id="post-image" name="image" accept="image/*" style="display:none;"
+            onchange="previewImage(this)">
+          <div class="d-flex gap-3">
+            <button type="button" class="form-icon-btn" title="Photo" onclick="triggerPhotoUpload()">
+              <i class="fas fa-image" style="color: #7fc15e;"></i>
+            </button>
+            <button type="button" class="form-icon-btn" title="Video" onclick="showVideoInput()">
+              <i class="fas fa-video" style="color: #7fc15e;"></i>
+            </button>
+            <button type="button" class="form-icon-btn" title="Event" onclick="showEventInput()">
+              <i class="fas fa-calendar-alt" style="color: #e7a33e;"></i>
+            </button>
+            <button type="button" class="form-icon-btn" title="Article"
+              onclick="focusPostForm(); setPostType('article')">
+              <i class="fas fa-newspaper" style="color: #f5987e;"></i>
+            </button>
+          </div>
+          <button type="submit" class="btn-premium-post" id="submit-post-btn">Post</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Feed Divider -->
+    <div class="feed-divider"
+      style="display: flex; align-items: center; justify-content: space-between; margin: 16px 0 8px; font-size: 12px; color: #666;">
+      <div style="flex-grow: 1; height: 1px; background: #e0e0e0; margin-right: 8px;"></div>
+      <span>Sort by: <strong>Top</strong> <i class="fas fa-caret-down"></i></span>
+    </div>
+
+    <!-- Posts Container -->
+    <div id="posts-container" class="min-vh-50">
+      <!-- Loading Placeholder -->
+      <div id="initial-loader" class="social-card p-5 text-center">
+        <i class="fas fa-circle-notch fa-spin fa-2x text-muted"></i>
+        <p class="text-muted mt-2">Loading your feed...</p>
+      </div>
+    </div>
+
+    <div id="no-posts-msg" class="social-card p-5 text-center" style="display:none;">
+      <i class="fas fa-users fa-3x text-muted mb-3"></i>
+      <h4>No posts to show yet</h4>
+      <p class="text-muted">Follow some people or start posting to see updates!</p>
+    </div>
+
+    <button id="load-more-btn" class="btn btn-block btn-light font-weight-bold text-primary mt-2"
+      style="display:none;">Load more posts</button>
+  </div>
+
+  <!-- Right Sidebar: News -->
+  <div class="right-sidebar">
+    <div class="social-card">
+      <div class="news-widget-header">
+        <span>NayNet News</span>
+        <i class="fas fa-info-circle text-muted" style="font-size: 12px;"></i>
+      </div>
+
+      <div class="news-list">
+        <div class="news-item">
+          <span class="news-title">Tech hiring surges in 2026</span>
+          <span class="news-meta">Top news • 10,934 readers</span>
+        </div>
+        <div class="news-item">
+          <span class="news-title">Remote work updates</span>
+          <span class="news-meta">3h ago • 5,211 readers</span>
+        </div>
+        <div class="news-item">
+          <span class="news-title">Python tops language charts</span>
+          <span class="news-meta">1d ago • 22,109 readers</span>
+        </div>
+        <div class="news-item">
+          <span class="news-title">New AI tools for devs</span>
+          <span class="news-meta">12h ago • 8,442 readers</span>
+        </div>
+      </div>
+
+      <button class="btn btn-link btn-sm text-muted font-weight-bold" style="padding: 12px 16px;">Show more <i
+          class="fas fa-chevron-down"></i></button>
+    </div>
+
+    <div class="social-card text-center" style="position: sticky; top: 70px;">
+      <!-- Ad or Promo -->
+      <div style="padding: 16px; font-size: 12px; color: #666;">
+        <p>Get the latest jobs right in your inbox!</p>
+        <img
+          src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/person_1.jpg' %}{% endif %}"
+          style="width: 50px; height: 50px; border-radius: 50%; margin: 8px 0;">
+        <p><strong>{{ user.first_name }}</strong>, explore relevant opportunities with NayNet Premium.</p>
+        <button class="btn btn-outline-primary rounded-pill btn-sm">Try for Free</button>
+      </div>
+    </div>
+
+    <!-- Footer Links Mini -->
+    <div style="text-align: center; font-size: 11px; color: #666; padding: 16px;">
+      <a href="#" style="color: #666; margin: 0 4px;">About</a>
+      <a href="#" style="color: #666; margin: 0 4px;">Accessibility</a>
+      <a href="#" style="color: #666; margin: 0 4px;">Help Center</a>
+      <br>
+      <a href="#" style="color: #666; margin: 0 4px;">Privacy & Terms</a>
+      <a href="#" style="color: #666; margin: 0 4px;">Ad Choices</a>
+      <br>
+      <div style="margin-top: 8px;">NayNet Corporation © 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- Post Templates -->
+<template id="post-template">
+  <div class="post-card" data-post-id="">
+    <div class="post-header">
+      <div class="post-user-info">
+        <img src="" alt="Profile" class="post-user-avatar author-profile-pic">
+        <div class="post-user-details">
+          <h4 class="post-author-name author-name"></h4>
+          <span class="post-time post-date"></span>
+        </div>
+      </div>
+      <div class="post-menu">
+        <button class="post-menu-btn" onclick="togglePostMenu(this)">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="post-menu-dropdown">
+          <button class="menu-item edit-post-btn" onclick="editPost()">
+            <i class="fas fa-edit"></i> Edit Post
+          </button>
+          <button class="menu-item delete-post-btn" onclick="deletePost()">
+            <i class="fas fa-trash"></i> Delete Post
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <p class="post-text post-content-text"></p>
+      <img src="" alt="Post Image" class="post-image" style="display: none;">
+    </div>
+
+    <div class="post-stats">
+      <div class="stat-item">
+        <span class="stat-count like-count">0</span>
+        <span class="stat-label">likes</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-count comment-count">0</span>
+        <span class="stat-label">comments</span>
+      </div>
+    </div>
+
+    <div class="post-actions">
+      <button class="action-btn like-btn">
+        <i class="far fa-thumbs-up"></i>
+        <span>Like</span>
+      </button>
+      <button class="action-btn comment-btn" onclick="toggleComments(this)">
+        <i class="far fa-comment"></i>
+        <span>Comment</span>
+      </button>
+      <button class="action-btn share-btn">
+        <i class="far fa-share-square"></i>
+        <span>Share</span>
+      </button>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" style="display: none;">
+      <div class="comments-list">
+        <!-- Comments will be loaded here -->
+      </div>
+
+      <!-- Add Comment -->
+      <div class="add-comment">
+        {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" alt="Profile" class="comment-user-avatar">
+        {% else %}
+        <img src="{% static 'images/person_1.jpg' %}" alt="Profile" class="comment-user-avatar">
+        {% endif %}
+        <form class="comment-form">
+          {% csrf_token %}
+          <input type="text" class="comment-input" placeholder="Write a comment..." required>
+          <button type="submit" class="comment-submit-btn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Comment Template -->
+<template id="comment-template">
+  <div class="comment-item" data-comment-id="">
+    <img src="" alt="Profile" class="comment-avatar comment-profile-pic">
+    <div class="comment-content">
+      <div class="comment-header">
+        <strong class="comment-author comment-author-name"></strong>
+        <span class="comment-time comment-date"></span>
+      </div>
+      <p class="comment-text comment-content-text"></p>
+      <div class="comment-actions">
+        <button class="comment-action-btn like-comment-btn">
+          <i class="far fa-thumbs-up"></i>
+          <span>Like</span>
+        </button>
+        <button class="comment-action-btn reply-btn">
+          <i class="far fa-reply"></i>
+          <span>Reply</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  // Enhanced Posts Page JavaScript
+  const CURRENT_USER_ID = {{ request.user.id }};
+  let currentPage = 1;
+  let hasMorePosts = true;
+  let currentFilter = 'all';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initialize page
+    loadPosts();
+
+    // Submit Form Listener
+    const createForm = document.getElementById('create-post-form');
+    if (createForm) {
+      createForm.addEventListener('submit', handlePostCreation);
+    }
+
+    // Load More Button
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        if (hasMorePosts) {
+          currentPage++;
+          loadPosts(false);
+        }
+      });
+    }
+  });
+
+  // --- Widget Interactions ---
+  function triggerPhotoUpload() {
+    focusPostForm();
+    document.getElementById('post-image').click();
+  }
+
+  function focusPostForm() {
+    const form = document.getElementById('create-post-form');
+    form.style.display = 'block';
+
+    // Animate open
+    form.style.opacity = '0';
+    setTimeout(() => {
+      form.style.transition = 'opacity 0.3s';
+      form.style.opacity = '1';
+    }, 10);
+
+    document.getElementById('post-content').focus();
+    document.querySelector('.cp-trigger').style.display = 'none';
+  }
+
+  function setPostType(type) {
+    document.getElementById('post-type-input').value = type;
+    document.getElementById('video-url-area').style.display = type === 'video' ? 'block' : 'none';
+    document.getElementById('event-date-area').style.display = type === 'event' ? 'block' : 'none';
+
+    if (type !== 'video') document.getElementById('video-url-input').value = '';
+    if (type !== 'event') document.getElementById('event-date-input').value = '';
+  }
+
+  function showVideoInput() {
+    focusPostForm();
+    setPostType('video');
+  }
+
+  function showEventInput() {
+    focusPostForm();
+    setPostType('event');
+  }
+
+  function previewImage(input) {
+    const file = input.files[0];
+    if (file) {
+      focusPostForm(); // Ensure form is visible
+      setPostType('photo');
+      document.getElementById('video-url-area').style.display = 'none';
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        document.getElementById('img-preview').src = e.target.result;
+        document.getElementById('image-preview-area').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearImage() {
+    document.getElementById('post-image').value = '';
+    document.getElementById('image-preview-area').style.display = 'none';
+    document.getElementById('img-preview').src = '';
+  }
+
+  // --- API Interactions ---
+  function handlePostCreation(e) {
+    e.preventDefault();
+    console.log('Post creation triggered');
+
+    const form = this;
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('submit-post-btn');
+    const originalBtnContent = submitBtn.innerHTML;
+
+    // Validation
+    const content = formData.get('content');
+    const image = formData.get('image');
+    if (!content.trim() && (!image || !image.size)) {
+      alert('Please enter some text or select an image');
+      return;
+    }
+
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> POSTING...';
+
+
+    fetch('/posts/create/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+      .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response OK:', response.ok);
+        if (!response.ok) {
+          return response.json().then(errData => {
+            console.error('Server error response:', errData);
+            throw new Error(errData.message || 'Network response was not ok');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('✓ Server response:', data);
+        if (data.success) {
+          // Clear form
+          form.reset();
+          clearImage();
+          document.getElementById('video-url-area').style.display = 'none';
+          document.getElementById('event-date-area').style.display = 'none';
+
+          // Add new post to top of feed
+          const container = document.getElementById('posts-container');
+
+          // Hide loader/no-posts messages
+          const loader = document.getElementById('initial-loader');
+          if (loader) loader.style.display = 'none';
+          const noPosts = document.getElementById('no-posts-msg');
+          if (noPosts) noPosts.style.display = 'none';
+
+          const newPostHtml = createPostHTML(data.post);
+          container.insertAdjacentHTML('afterbegin', newPostHtml);
+
+          // Close form
+          document.getElementById('create-post-form').style.display = 'none';
+          document.querySelector('.cp-trigger').style.display = 'block';
+
+        } else {
+          console.error('Post creation failed:', data.message);
+          alert('Error: ' + (data.message || 'Unknown error occurred'));
+        }
+      })
+      .catch(error => {
+        console.error('✗ Post creation error:', error);
+        console.error('Error stack:', error.stack);
+        alert('Could not share post. Check console (F12) for details.\n\nError: ' + error.message);
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnContent;
+      });
+  }
+
+  function loadPosts(reset = false) {
+    const container = document.getElementById('posts-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const initialLoader = document.getElementById('initial-loader');
+    const noPostsMsg = document.getElementById('no-posts-msg');
+
+    if (reset) {
+      container.innerHTML = '';
+      if (initialLoader) initialLoader.style.display = 'block';
+      if (noPostsMsg) noPostsMsg.style.display = 'none';
+      currentPage = 1;
+    }
+
+    fetch(`/posts/feed/?page=${currentPage}&filter=${currentFilter}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(response => response.json())
+      .then(data => {
+        // Hide initial loader
+        if (initialLoader) initialLoader.style.display = 'none';
+
+        if (reset) container.innerHTML = '';
+
+        if (data.posts && data.posts.length > 0) {
+          if (noPostsMsg) noPostsMsg.style.display = 'none';
+          data.posts.forEach(post => {
+            const postHtml = createPostHTML(post);
+            container.insertAdjacentHTML('beforeend', postHtml);
+          });
+
+          hasMorePosts = data.has_more;
+          loadMoreBtn.style.display = hasMorePosts ? 'block' : 'none';
+        } else if (reset || currentPage === 1) {
+          if (noPostsMsg) noPostsMsg.style.display = 'block';
+          loadMoreBtn.style.display = 'none';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading posts:', error);
+        if (initialLoader) initialLoader.style.display = 'none';
+      });
+  }
+
+  function createPostHTML(post) {
+    let mediaHtml = '';
+    if (post.image) {
+      mediaHtml = `<img src="${post.image}" class="fp-image">`;
+    } else if (post.video_url) {
+      // Basic iframe for YouTube/Vimeo/Direct link
+      if (post.video_url.includes('youtube.com') || post.video_url.includes('youtu.be')) {
+        let vidId = '';
+        if (post.video_url.includes('v=')) vidId = post.video_url.split('v=')[1].split('&')[0];
+        else vidId = post.video_url.split('/').pop();
+        mediaHtml = `<div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+                        <iframe src="https://www.youtube.com/embed/${vidId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
+                     </div>`;
+      } else {
+        mediaHtml = `<video src="${post.video_url}" class="fp-image" controls></video>`;
+      }
+    } else if (post.post_type === 'event' && post.event_date) {
+      mediaHtml = `
+            <div class="social-card m-3 p-3 text-center border" style="background: #fffafa; border-color: #ffdada !important;">
+                <i class="fas fa-calendar-check text-warning fa-3x mb-2"></i>
+                <h6 class="text-muted mb-1 text-uppercase small font-weight-bold">Event Scheduled</h6>
+                <div class="h5 font-weight-bold text-dark mb-0">${post.event_date}</div>
+            </div>
+        `;
+    } else if (post.post_type === 'article') {
+      mediaHtml = `
+            <div class="border-top border-bottom p-4 bg-light text-center">
+                <i class="fas fa-file-alt text-danger fa-3x mb-3"></i>
+                <div class="text-dark font-weight-bold">Published Article</div>
+                <div class="text-muted small">Read the full story on our blog</div>
+            </div>
+        `;
+    }
+
+    const isAuthor = post.author_id === CURRENT_USER_ID;
+    const menuHtml = isAuthor ? `
+        <div class="fp-menu-container">
+            <button class="btn btn-sm text-muted" onclick="togglePostMenu(${post.id})">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div id="post-menu-${post.id}" class="fp-menu-dropdown">
+                <a class="fp-menu-item" onclick="handleEditPost(${post.id})">
+                    <i class="fas fa-edit"></i> Edit Post
+                </a>
+                <a class="fp-menu-item danger" onclick="handleDeletePost(${post.id})">
+                    <i class="fas fa-trash-alt"></i> Delete Post
+                </a>
+            </div>
+        </div>
+    ` : `<button class="btn btn-sm text-muted ml-auto"><i class="fas fa-ellipsis-h"></i></button>`;
+
+    return `
+    <div class="social-card feed-post animate-fade-in" data-post-id="${post.id}" id="post-card-${post.id}">
+        <div class="fp-header">
+            <img src="${post.author_profile_pic || '/static/images/person_1.jpg'}" class="fp-avatar">
+            <div class="fp-info">
+                <a href="/profile/${post.author_id}/" class="fp-name">${post.author_name}</a>
+                <span class="fp-meta">${post.created_at_formatted} • <i class="fas fa-globe-americas"></i></span>
+            </div>
+            ${menuHtml}
+        </div>
+        
+        <div class="fp-content" id="post-content-${post.id}">
+            ${post.content}
+        </div>
+        
+        <div id="media-container-${post.id}">
+            ${mediaHtml}
+        </div>
+        
+        <div class="fp-stats">
+            <div>
+                <i class="fas fa-thumbs-up text-primary small-icon"></i> 
+                <span class="like-count">${post.likes_count || 0}</span>
+            </div>
+            <div onclick="toggleComments(${post.id})" style="cursor:pointer;">
+                <span class="comment-count">${post.comments_count || 0} comments</span>
+            </div>
+        </div>
+        
+        <div class="fp-actions">
+            <button class="fp-action-btn ${post.is_liked ? 'active' : ''} like-btn" onclick="handleLike(${post.id}, this)">
+                <i class="${post.is_liked ? 'fas' : 'far'} fa-thumbs-up"></i> Like
+            </button>
+            <button class="fp-action-btn" onclick="toggleComments(${post.id})">
+                <i class="far fa-comment-alt"></i> Comment
+            </button>
+            <button class="fp-action-btn" onclick="handleShare(${post.id})">
+                <i class="fas fa-share"></i> Share
+            </button>
+            <button class="fp-action-btn" onclick="handleSend(${post.id})">
+                <i class="fas fa-paper-plane"></i> Send
+            </button>
+        </div>
+        
+        <!-- Comments Section Placeholder -->
+        <div class="comments-section" id="comments-${post.id}" style="display:none;">
+             <div class="comments-list" id="comments-list-${post.id}"></div>
+             <div class="add-comment d-flex mt-2 align-items-center">
+                <img src="${post.author_profile_pic || '/static/images/person_1.jpg'}" class="comment-avatar">
+                <form onsubmit="handleCommentSubmit(event, ${post.id})" class="flex-grow-1 ml-2">
+                     <input type="text" class="form-control rounded-pill comment-input" placeholder="Add a comment..." style="font-size: 13px;">
+                </form>
+             </div>
+        </div>
+    </div>
+  `;
+  }  }
+
+  function togglePostMenu(postId) {
+    const menu = document.getElementById(`post-menu-${postId}`);
+    const isVisible = menu.classList.contains('show');
+
+    // Close all other menus first
+    document.querySelectorAll('.fp-menu-dropdown').forEach(m => m.classList.remove('show'));
+
+    if (!isVisible) {
+      menu.classList.add('show');
+    }
+
+    // Close menu when clicking outside
+    const closeMenu = (e) => {
+      if (!menu.contains(e.target) && !e.target.closest(`[onclick="togglePostMenu(${postId})"]`)) {
+        menu.classList.remove('show');
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    if (!isVisible) setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
+
+  function handleDeletePost(postId) {
+    if (confirm('Are you sure you want to delete this post?')) {
+      fetch(`/posts/${postId}/delete/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const card = document.getElementById(`post-card-${postId}`);
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => card.remove(), 300);
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+  }
+
+  function handleEditPost(postId) {
+    const card = document.getElementById(`post-card-${postId}`);
+    const contentArea = document.getElementById(`post-content-${postId}`);
+    const currentContent = contentArea.textContent.trim();
+
+    const newContent = prompt('Edit your post:', currentContent);
+    if (newContent !== null && newContent.trim() !== '' && newContent !== currentContent) {
+      const formData = new FormData();
+      formData.append('content', newContent.trim());
+
+      fetch(`/posts/${postId}/edit/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            contentArea.textContent = newContent.trim();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+  }
+
+  function handleLike(postId, btn) {
+    fetch(`/posts/${postId}/like/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        const countSpan = btn.closest('.feed-post').querySelector('.like-count');
+        countSpan.textContent = data.likes_count;
+
+        const icon = btn.querySelector('i');
+        if (data.is_liked) {
+          btn.classList.add('active');
+          icon.className = 'fas fa-thumbs-up';
+        } else {
+          btn.classList.remove('active');
+          icon.className = 'far fa-thumbs-up';
+        }
+      });
+  }
+
+  function toggleComments(postId) {
+    const section = document.getElementById(`comments-${postId}`);
+    if (section.style.display === 'none') {
+      section.style.display = 'block';
+      loadComments(postId);
+    } else {
+      section.style.display = 'none';
+    }
+  }
+
+  function loadComments(postId) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    list.innerHTML = '<div class="text-center p-2"><i class="fas fa-spinner fa-spin text-muted"></i></div>';
+
+    fetch(`/posts/${postId}/comments/`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        list.innerHTML = '';
+        if (data.comments && data.comments.length > 0) {
+          data.comments.forEach(c => {
+            list.insertAdjacentHTML('beforeend', `
+                    <div class="comment-item animate-fade-in">
+                        <img src="${c.author_profile_pic || '/static/images/person_1.jpg'}" class="comment-avatar">
+                        <div class="comment-bubble">
+                            <div class="comment-author">${c.author_name}</div>
+                            <div class="comment-text">${c.content}</div>
+                            <div class="comment-time">${c.created_at_formatted}</div>
+                        </div>
+                    </div>
+                `);
+          });
+        } else {
+          list.innerHTML = '<div class="text-center p-3 text-muted" style="font-size: 13px;">No comments yet. Be the first to comment!</div>';
+        }
+      });
+  }
+
+  function handleCommentSubmit(e, postId) {
+    e.preventDefault();
+    const input = e.target.querySelector('input');
+    const content = input.value.trim();
+    if (!content) return;
+
+    const formData = new FormData();
+    formData.append('content', content);
+
+    fetch(`/posts/${postId}/comments/create/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          input.value = '';
+          const list = document.getElementById(`comments-list-${postId}`);
+
+          if (list.innerText.includes('No comments yet')) list.innerHTML = '';
+
+          const c = data.comment;
+          list.insertAdjacentHTML('afterbegin', `
+                <div class="comment-item animate-fade-in" style="background: rgba(108, 92, 231, 0.05); border-radius: 8px; padding: 4px;">
+                    <img src="${c.author_profile_pic || '/static/images/person_1.jpg'}" class="comment-avatar">
+                    <div class="comment-bubble">
+                        <div class="comment-author">${c.author_name}</div>
+                        <div class="comment-text">${c.content}</div>
+                        <div class="comment-time">${c.created_at_formatted}</div>
+                    </div>
+                </div>
+            `);
+
+          const card = document.getElementById(`post-card-${postId}`);
+          const countSpan = card.querySelector('.comment-count');
+          const currentCount = parseInt(countSpan.textContent) || 0;
+          countSpan.textContent = (currentCount + 1) + ' comments';
+        }
+      });
+  }
+
+  function handleShare(postId) {
+    const url = window.location.origin + `/posts/${postId}/`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Post link copied to clipboard!');
+    });
+  }
+
+  function handleSend(postId) {
+    alert('Messaging feature is being integrated. You can send this post to friends soon!');
+  }
+</script>
+
+{% endblock %}

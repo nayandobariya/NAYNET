@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Live Interview Session{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Live Interview Session - {{
+                        session.interview_selection.applicant.user.get_full_name }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Your Video</h5>
+                            <video id="localVideo" autoplay muted class="w-100"></video>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{% if is_interviewer %}Candidate{% else %}Interviewer{% endif %} Video</h5>
+                            <video id="remoteVideo" autoplay class="w-100"></video>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        {% if is_interviewer %}
+                        <div id="interviewerControls">
+                            <button id="startCallButton" class="btn btn-success">Start Interview Call</button>
+                            <button id="hangupButton" class="btn btn-danger" disabled>Hang Up</button>
+                            <div id="callTimeout" style="display: none;" class="mt-2">
+                                <p class="text-warning"><strong>Candidate did not join. Please try again.</strong></p>
+                                <button id="retryCallButton" class="btn btn-warning">Retry Call</button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div id="candidateControls">
+                            <div id="waitingForCall" class="text-center">
+                                <p><strong>Waiting for interviewer to start the call...</strong></p>
+                            </div>
+                            <div id="incomingCall" style="display: none;">
+                                <p class="text-center mb-3"><strong>Incoming Interview Call...</strong></p>
+                                <button id="acceptButton" class="btn btn-success mr-2">Accept Call</button>
+                                <button id="rejectButton" class="btn btn-danger">Reject Call</button>
+                            </div>
+                            <button id="hangupButton" class="btn btn-danger" disabled style="display: none;">Hang
+                                Up</button>
+                        </div>
+                        {% endif %}
+                        <div id="callStatus" class="mt-2">
+                            <small id="statusText" class="text-muted">Ready to connect</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Session Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Candidate:</strong> {{ session.interview_selection.applicant.user.get_full_name }}</p>
+                    <p><strong>Job:</strong> {{ session.interview_selection.interview_round.job.title }}</p>
+                    <p><strong>Scheduled:</strong> {{ session.scheduled_at }}</p>
+                    <p><strong>Status:</strong> {% if session.completed %}Completed{% else %}In Progress{% endif %}</p>
+                </div>
+            </div>
+
+            {% if is_interviewer %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Complete Interview</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="feedback" class="form-label">Feedback</label>
+                            <textarea class="form-control" id="feedback" name="feedback" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="final_salary" class="form-label">Final Salary Offer</label>
+                            <input type="number" class="form-control" id="final_salary" name="final_salary" step="0.01">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Complete Interview</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script>
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const statusText = document.getElementById('statusText');
+
+    let localStream;
+    let remoteStream;
+    let peerConnection;
+    let websocket;
+    let callTimeout;
+    const isInterviewer = JSON.parse('{{ is_interviewer|yesno:"true,false" }}');
+    let callInProgress = false;
+
+    const sessionId = '{{ session.session_id }}';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const websocketUrl = `${protocol}//${window.location.host}/ws/interview/${sessionId}/`;
+
+    const configuration = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' }
+        ]
+    };
+
+    // Initialize WebSocket connection
+    function initWebSocket() {
+        websocket = new WebSocket(websocketUrl);
+
+        websocket.onopen = function (event) {
+            console.log('WebSocket connected');
+        };
+
+        websocket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            handleWebSocketMessage(data);
+        };
+
+        websocket.onclose = function (event) {
+            console.log('WebSocket disconnected');
+        };
+
+        websocket.onerror = function (error) {
+            console.error('WebSocket error:', error);
+        };
+    }
+
+    function handleWebSocketMessage(data) {
+        switch (data.type) {
+            case 'offer':
+                handleOffer(data.offer);
+                break;
+            case 'answer':
+                handleAnswer(data.answer);
+                break;
+            case 'ice_candidate':
+                handleIceCandidate(data.candidate);
+                break;
+            case 'call_request':
+                handleCallRequest();
+                break;
+            case 'call_accepted':
+                handleCallAccepted();
+                break;
+            case 'call_rejected':
+                handleCallRejected();
+                break;
+            case 'call_ended':
+                handleCallEnded();
+                break;
+        }
+    }
+
+    function updateStatus(message) {
+        statusText.textContent = message;
+    }
+
+
+
+    // Initialize WebSocket when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        initWebSocket();
+
+        // Add event listeners only for elements that exist
+        const startCallButton = document.getElementById('startCallButton');
+        const hangupButton = document.getElementById('hangupButton');
+        const retryCallButton = document.getElementById('retryCallButton');
+        const acceptButton = document.getElementById('acceptButton');
+        const rejectButton = document.getElementById('rejectButton');
+
+        if (startCallButton) startCallButton.addEventListener('click', startCall);
+        if (hangupButton) hangupButton.addEventListener('click', hangupCall);
+        if (retryCallButton) retryCallButton.addEventListener('click', retryCall);
+        if (acceptButton) acceptButton.addEventListener('click', acceptCall);
+        if (rejectButton) rejectButton.addEventListener('click', rejectCall);
+    });
+
+    async function startCall() {
+        try {
+            updateStatus('Initializing call...');
+            const startCallButton = document.getElementById('startCallButton');
+            const hangupButton = document.getElementById('hangupButton');
+
+            // Send call request to candidate
+            sendWebSocketMessage({ type: 'call_request' });
+
+            // Set timeout for candidate response (30 seconds)
+            callTimeout = setTimeout(() => {
+                if (!callInProgress) {
+                    handleCallTimeout();
+                }
+            }, 30000);
+
+            startCallButton.disabled = true;
+            updateStatus('Waiting for candidate to join...');
+
+        } catch (error) {
+            console.error('Error starting call:', error);
+            updateStatus('Error starting call');
+        }
+    }
+
+    function handleCallRequest() {
+        if (!isInterviewer) {
+            const waitingForCall = document.getElementById('waitingForCall');
+            const incomingCall = document.getElementById('incomingCall');
+
+            waitingForCall.style.display = 'none';
+            incomingCall.style.display = 'block';
+            updateStatus('Incoming interview call...');
+        }
+    }
+
+    function handleCallAccepted() {
+        if (isInterviewer && callTimeout) {
+            clearTimeout(callTimeout);
+            callTimeout = null;
+            startWebRTCCall();
+        }
+    }
+
+    function handleCallRejected() {
+        if (isInterviewer) {
+            if (callTimeout) {
+                clearTimeout(callTimeout);
+                callTimeout = null;
+            }
+            updateStatus('Candidate rejected the call');
+            resetInterviewerControls();
+        }
+    }
+
+    function handleCallTimeout() {
+        if (isInterviewer) {
+            const callTimeoutDiv = document.getElementById('callTimeout');
+            callTimeoutDiv.style.display = 'block';
+            updateStatus('Candidate did not respond');
+        }
+    }
+
+    function resetInterviewerControls() {
+        const startCallButton = document.getElementById('startCallButton');
+        const hangupButton = document.getElementById('hangupButton');
+        const callTimeoutDiv = document.getElementById('callTimeout');
+
+        startCallButton.disabled = false;
+        hangupButton.disabled = true;
+        callTimeoutDiv.style.display = 'none';
+    }
+
+    function retryCall() {
+        const callTimeoutDiv = document.getElementById('callTimeout');
+        callTimeoutDiv.style.display = 'none';
+        startCall();
+    }
+
+    async function startWebRTCCall() {
+        try {
+            updateStatus('Connecting...');
+            callInProgress = true;
+
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(configuration);
+
+            peerConnection.addEventListener('icecandidate', event => {
+                if (event.candidate) {
+                    sendWebSocketMessage({
+                        type: 'ice_candidate',
+                        candidate: event.candidate
+                    });
+                }
+            });
+
+            peerConnection.addEventListener('track', event => {
+                if (event.streams && event.streams[0]) {
+                    remoteVideo.srcObject = event.streams[0];
+                }
+            });
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log('ICE Connection State:', peerConnection.iceConnectionState);
+                updateStatus(`Connection: ${peerConnection.iceConnectionState}`);
+            };
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Create offer and send via WebSocket
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            sendWebSocketMessage({
+                type: 'offer',
+                offer: offer
+            });
+
+            const hangupButton = document.getElementById('hangupButton');
+            hangupButton.disabled = false;
+            updateStatus('Call connected');
+
+        } catch (error) {
+            console.error('Error in WebRTC call:', error);
+            updateStatus('Error connecting call');
+            callInProgress = false;
+        }
+    }
+
+    async function acceptCall() {
+        try {
+            updateStatus('Accepting call...');
+            callInProgress = true;
+
+            // Get media stream
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
+
+            // Send acceptance
+            sendWebSocketMessage({ type: 'call_accepted' });
+
+            const incomingCall = document.getElementById('incomingCall');
+            const hangupButton = document.getElementById('hangupButton');
+
+            incomingCall.style.display = 'none';
+            hangupButton.style.display = 'block';
+            hangupButton.disabled = false;
+
+        } catch (error) {
+            console.error('Error accepting call:', error);
+            updateStatus('Error accepting call');
+        }
+    }
+
+    function rejectCall() {
+        sendWebSocketMessage({ type: 'call_rejected' });
+        updateStatus('Call rejected');
+
+        const incomingCall = document.getElementById('incomingCall');
+        const waitingForCall = document.getElementById('waitingForCall');
+
+        incomingCall.style.display = 'none';
+        waitingForCall.style.display = 'block';
+    }
+
+    async function handleOffer(offer) {
+        if (!peerConnection) {
+            peerConnection = new RTCPeerConnection(configuration);
+
+            peerConnection.addEventListener('icecandidate', event => {
+                if (event.candidate) {
+                    sendWebSocketMessage({
+                        type: 'ice_candidate',
+                        candidate: event.candidate
+                    });
+                }
+            });
+
+            peerConnection.addEventListener('track', event => {
+                if (event.streams && event.streams[0]) {
+                    remoteVideo.srcObject = event.streams[0];
+                }
+            });
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            }
+        }
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        sendWebSocketMessage({
+            type: 'answer',
+            answer: answer
+        });
+
+        updateStatus('Call connected');
+    }
+
+    async function handleAnswer(answer) {
+        if (peerConnection) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        }
+    }
+
+    async function handleIceCandidate(candidate) {
+        if (peerConnection) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    }
+
+    function sendWebSocketMessage(message) {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            websocket.send(JSON.stringify(message));
+        } else {
+            console.error('WebSocket is not connected');
+        }
+    }
+
+    function hangupCall() {
+        if (callTimeout) {
+            clearTimeout(callTimeout);
+            callTimeout = null;
+        }
+
+        callInProgress = false;
+
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+
+        localVideo.srcObject = null;
+        remoteVideo.srcObject = null;
+
+        if (isInterviewer) {
+            resetInterviewerControls();
+        } else {
+            const hangupButton = document.getElementById('hangupButton');
+            const waitingForCall = document.getElementById('waitingForCall');
+
+            hangupButton.style.display = 'none';
+            waitingForCall.style.display = 'block';
+        }
+
+        updateStatus('Call ended');
+        sendWebSocketMessage({ type: 'call_ended' });
+    }
+
+    function handleCallEnded() {
+        hangupCall();
+    }
+</script>
+{% endblock %}

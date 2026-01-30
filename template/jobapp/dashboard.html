@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load is_job_already_applied %}
+{% load is_job_already_saved %}
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="section-hero overlay inner-page bg-image"
+    style="background-image: url('{% static 'images/hero_1.jpg' %}');" id="home-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <h1 class="text-white font-weight-bold">Control Center</h1>
+                <div class="custom-breadcrumbs">
+                    <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+                    <span class="text-white"><strong>Dashboard</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.3);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .dashboard-container {
+        padding: 4rem 0;
+        margin-top: -60px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .premium-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        padding: 0;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header {
+        background: white;
+        padding: 1.5rem 2.5rem;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dashboard-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .btn-refresh-premium {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: 8px 24px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-refresh-premium:hover {
+        transform: rotate(15deg) scale(1.05);
+        color: white;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .nav-premium {
+        border: none;
+        padding: 0 2rem;
+        background: #f8fafc;
+        gap: 10px;
+    }
+
+    .nav-premium .nav-link {
+        border: none !important;
+        color: #718096;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .nav-premium .nav-link.active {
+        background: transparent !important;
+        color: #667eea !important;
+    }
+
+    .nav-premium .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--primary-gradient);
+        border-radius: 3px 3px 0 0;
+    }
+
+    /* Table consistency for employee side */
+    .employee-table th {
+        background: #f8fafc;
+        color: #4a5568 !important;
+        font-weight: 700;
+        border-bottom: 2px solid #edf2f7;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .gap-3 {
+        gap: 1rem;
+    }
+
+    .d-flex.gap-2,
+    .d-flex.gap-3 {
+        display: flex !important;
+    }
+</style>
+
+<section class="dashboard-container">
+    <div class="container">
+        {% include 'messages.html' %}
+
+        <div class="premium-card">
+            {% if user.role == "employer" %}
+            <div class="dashboard-header">
+                <h5 class="dashboard-title"><i class="fas fa-briefcase mr-2 text-primary"></i> My Job Postings</h5>
+                <button id="refresh-jobs" class="btn-refresh-premium">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                </button>
+            </div>
+            <div id="jobs-table-container" class="p-0">
+                {% include 'jobapp/employer_jobs_table.html' %}
+            </div>
+            {% elif user.role == "employee" %}
+            <ul class="nav nav-tabs nav-premium" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab"><i
+                            class="far fa-bookmark mr-2"></i> Bookmarks</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab"><i
+                            class="fas fa-paper-plane mr-2"></i> Applied</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="interview-tab" data-toggle="tab" href="#interview" role="tab"><i
+                            class="far fa-comments mr-2"></i> Interviews</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active p-4" id="home" role="tabpanel">
+                    {% if savedjobs %}
+                    <div class="table-responsive">
+                        <table class="table employee-table text-center">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Job Title</th>
+                                    <th>Saved on</th>
+                                    <th>Deadline</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in savedjobs %}
+                                <tr id="row_{{ job.id }}">
+                                    <td class="text-left font-weight-bold">
+                                        <a href="{% url 'jobapp:single-job' job.job.id %}" class="text-dark">{{
+                                            job.job.title }}</a>
+                                    </td>
+                                    <td>{{ job.timestamp | date:'M d, Y' }}</td>
+                                    <td>{{ job.job.last_date | date:'M d, Y' }}</td>
+                                    <td>
+                                        <button
+                                            onclick="call_sw_alert_func('{% url 'jobapp:delete-bookmark' job.id %}','{{ job.id }}','Remove from bookmarks?')"
+                                            class="btn btn-outline-danger btn-sm" style="border-radius: 8px;"><i
+                                                class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="far fa-bookmark fa-3x text-light mb-3"></i>
+                        <p class="text-muted">No bookmarked jobs found.</p>
+                        <a href="{% url 'jobapp:job-list' %}" class="btn btn-primary btn-sm mt-2">Explore Jobs</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade p-4" id="profile" role="tabpanel">
+                    {% if appliedjobs %}
+                    <div class="table-responsive">
+                        <table class="table employee-table text-center">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Job Title</th>
+                                    <th>Applied on</th>
+                                    <th>Company</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in appliedjobs %}
+                                <tr>
+                                    <td class="text-left font-weight-bold">
+                                        <a href="{% url 'jobapp:single-job' job.job.id %}" class="text-dark">{{
+                                            job.job.title }}</a>
+                                    </td>
+                                    <td>{{ job.timestamp | date:'M d, Y' }}</td>
+                                    <td>{{ job.job.company_name }}</td>
+                                    <td><span class="badge badge-success px-3 py-2"
+                                            style="border-radius: 20px;">Submitted</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-paper-plane fa-3x text-light mb-3"></i>
+                        <p class="text-muted">You haven't applied to any jobs yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade p-4" id="interview" role="tabpanel">
+                    {% if interview_sessions %}
+                    <div class="table-responsive">
+                        <table class="table employee-table text-center">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Position</th>
+                                    <th>Interviewer</th>
+                                    <th>Scheduled for</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in interview_sessions %}
+                                <tr>
+                                    <td class="text-left font-weight-bold">{{
+                                        session.interview_selection.interview_round.job.title }}</td>
+                                    <td>{{ session.interviewer.get_full_name }}</td>
+                                    <td>{{ session.scheduled_at|date:"M d, Y H:i"|default:"TBD" }}</td>
+                                    <td>
+                                        {% if session.completed %}
+                                        <span class="badge badge-success px-3 py-2"
+                                            style="border-radius: 20px;">Completed</span>
+                                        {% else %}
+                                        <span class="badge badge-warning px-3 py-2"
+                                            style="border-radius: 20px;">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'jobapp:interview-session' session.session_id %}"
+                                            class="btn btn-primary btn-sm" style="border-radius: 8px;">View details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="far fa-comments fa-3x text-light mb-3"></i>
+                        <p class="text-muted">No scheduled interviews at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/sweet-alert.js' %}"></script>
+<script src="{% static 'js/sweet-alert-ajax.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#refresh-jobs').click(function () {
+            const $btn = $(this);
+            $btn.find('i').addClass('fa-spin');
+            $.ajax({
+                url: '{% url "jobapp:employer-jobs-table" %}',
+                type: 'GET',
+                success: function (data) {
+                    $('#jobs-table-container').html(data);
+                    $btn.find('i').removeClass('fa-spin');
+                },
+                error: function () {
+                    alert('Error refreshing jobs table.');
+                    $btn.find('i').removeClass('fa-spin');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

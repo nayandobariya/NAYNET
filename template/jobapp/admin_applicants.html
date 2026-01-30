@@ -1,0 +1,73 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Manage Applicants{% endblock %}
+
+{% block extrahead %}{% endblock %}
+
+{% block content %}
+<div class="card mb-4 fade-in">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-user-check me-2"></i> Manage Applicants</h4>
+        <a href="{% url 'jobapp:admin-dashboard' %}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i>
+            Back
+            to Dashboard</a>
+    </div>
+</div>
+
+<div class="card fade-in" style="animation-delay: 0.1s;">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="py-3">Job Name</th>
+                        <th class="py-3">Applicant Name</th>
+                        <th class="py-3">Applied On</th>
+                        <th class="py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for applicant in applicants %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ applicant.job.title }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2 bg-indigo-100 text-indigo-600 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 14px;">
+                                    {{ applicant.user.get_full_name|slice:":1"|default:"A" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ applicant.user.get_full_name }}</div>
+                                    <div class="small text-muted">{{ applicant.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-muted small">
+                                <i class="fas fa-clock me-1"></i> {{ applicant.timestamp|date:"M d, Y" }}
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'jobapp:applicant-details' applicant.user.id applicant.job.id %}"
+                                    class="btn btn-sm btn-outline-info" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'jobapp:admin-applicant-edit' applicant.id %}"
+                                    class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'jobapp:admin-applicant-delete' applicant.id %}"
+                                    class="btn btn-sm btn-outline-danger" title="Delete"><i
+                                        class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">No applicants found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

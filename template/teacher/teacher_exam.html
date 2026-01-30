@@ -1,0 +1,412 @@
+{% extends 'teacher/teacherbase.html' %}
+{% load widget_tweaks %}
+{% block content %}
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style type="text/css">
+      a:link {
+        text-decoration: none;
+      }
+  
+      .order-card {
+        color: rgb(255, 255, 255);
+      }
+  
+      .bg-c-blue {
+        background: #04868f;
+      }
+  
+      .bg-c-green {
+        background:#4C51BF;
+      }
+  
+      .bg-c-yellow {
+        background: #F56565;
+      }
+  
+      .bg-c-pink {
+        background: #663a30;
+      }
+  
+  
+      .card {
+        
+        -webkit-box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
+        box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
+        border: 1px solid black;
+        margin-bottom: 30px;
+        -webkit-transition: all 0.3s ease-in-out;
+        transition: all 0.3s ease-in-out;
+      }
+  
+      .card .card-block {
+        padding: 25px;
+      }
+  
+      .order-card i {
+        font-size: 26px;
+      }
+
+      .f-left {
+        float: left;
+      }
+
+      .f-right {
+        float: right;
+      }
+
+      .btn-link {
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-decoration: none !important;
+      }
+
+      .btn-link:hover {
+        text-decoration: none !important;
+        color: white !important;
+      }
+
+      header {
+      left: 0px;
+      right: 0px;
+    }
+    </style>
+  </head>
+<br><br>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 col-xl-4">
+        <div class="card bg-c-blue order-card">
+          <div class="card-block">
+            <h6 class="m-b-20"> <button type="button" class="btn btn-link" id="add-exam-btn" style="text-decoration: none;color:white;padding:0;">Add Exam</button> </h6>
+            <h2 class="text-right"><i class="fas fa-plus f-left"></i></h2>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 col-xl-4">
+        <div class="card bg-c-green order-card">
+          <div class="card-block">
+            <h6 class="m-b-20"> <button type="button" class="btn btn-link total-exams-btn" style="text-decoration: none;color:white;padding:0;">Total Exams</button> </h6>
+            <h2 class="text-right"><i class="fas fa-book f-left"></i><span id="total-exams">{{courses|length}}</span></h2>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 col-xl-4">
+        <div class="card bg-c-yellow order-card">
+          <div class="card-block">
+            <h6 class="m-b-20"> <button type="button" class="btn btn-link total-questions-btn" style="text-decoration: none;color:white;padding:0;">Total Questions</button> </h6>
+            <h2 class="text-right"><i class="fas fa-question-circle f-left"></i><span id="total-questions">{{total_questions}}</span></h2>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Exam Modal -->
+    <div class="modal fade" id="addExamModal" tabindex="-1" role="dialog" aria-labelledby="addExamModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addExamModalLabel">Add New Exam</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="add-exam-form">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="course_name">Exam Name</label>
+                <input type="text" class="form-control" id="course_name" name="course_name" placeholder="Enter exam name" required>
+                <small class="form-text text-muted">Give your exam a descriptive name</small>
+              </div>
+              <div class="form-group">
+                <label for="question_number">Number of Questions</label>
+                <input type="number" class="form-control" id="question_number" name="question_number" min="1" max="100" placeholder="Enter number of questions" required>
+                <small class="form-text text-muted">How many questions will be in this exam? (1-100)</small>
+              </div>
+              <div class="form-group">
+                <label for="marks_per_question">Marks per Question</label>
+                <input type="number" class="form-control" id="marks_per_question" name="marks_per_question" min="1" max="10" value="1" required>
+                <small class="form-text text-muted">How many marks is each question worth? (1-10)</small>
+              </div>
+              <div class="form-group">
+                <label for="total_marks">Total Marks (Auto-calculated)</label>
+                <input type="number" class="form-control" id="total_marks" name="total_marks" readonly required>
+                <small class="form-text text-muted">Total marks = Questions × Marks per question</small>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="save-exam-btn">Save Exam</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exams Table -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Exam List</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped" id="exams-table">
+                <thead>
+                  <tr>
+                    <th>Exam Name</th>
+                    <th>Total Questions</th>
+                    <th>Total Marks</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="exams-tbody">
+                  {% for course in courses %}
+                  <tr data-id="{{course.id}}">
+                    <td>{{course.course_name}}</td>
+                    <td>{{course.question_number}}</td>
+                    <td>{{course.total_marks}}</td>
+                    <td>
+                      <button class="btn btn-sm btn-info view-questions-btn" data-id="{{course.id}}">View Questions</button>
+                      <button class="btn btn-sm btn-warning add-questions-btn" data-id="{{course.id}}">Add Questions</button>
+                      <button class="btn btn-sm btn-danger delete-exam-btn" data-id="{{course.id}}">Delete</button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+console.log('Teacher exam dashboard JavaScript loaded');
+
+$(document).ready(function() {
+    console.log('Document ready - initializing teacher exam dashboard');
+    // Function to update dashboard stats
+    function updateDashboardStats() {
+        $.ajax({
+            url: '/teacher-exam/',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                $('#total-exams').text(data.courses.length);
+                var totalQuestions = 0;
+                data.courses.forEach(function(course) {
+                    totalQuestions += course.question_number;
+                });
+                $('#total-questions').text(totalQuestions);
+            },
+            error: function(xhr, status, error) {
+                console.log('Error updating dashboard stats:', error);
+            }
+        });
+    }
+
+    // Function to refresh exams table
+    function refreshExamsTable() {
+        $.ajax({
+            url: '/teacher-exam/',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                var tbody = $('#exams-tbody');
+                tbody.empty();
+                data.courses.forEach(function(course) {
+                    var row = '<tr data-id="' + course.id + '">' +
+                        '<td>' + course.course_name + '</td>' +
+                        '<td>' + course.question_number + '</td>' +
+                        '<td>' + course.total_marks + '</td>' +
+                        '<td>' +
+                            '<button class="btn btn-sm btn-info view-questions-btn" data-id="' + course.id + '">View Questions</button> ' +
+                            '<button class="btn btn-sm btn-warning add-questions-btn" data-id="' + course.id + '">Add Questions</button> ' +
+                            '<button class="btn btn-sm btn-danger delete-exam-btn" data-id="' + course.id + '">Delete</button>' +
+                        '</td>' +
+                        '</tr>';
+                    tbody.append(row);
+                });
+                updateDashboardStats();
+            },
+            error: function(xhr, status, error) {
+                console.log('Error refreshing exams table:', error);
+            }
+        });
+    }
+
+    // Function to calculate total marks
+    function calculateTotalMarks() {
+        var questionNumber = parseInt($('#question_number').val()) || 0;
+        var marksPerQuestion = parseInt($('#marks_per_question').val()) || 1;
+        var totalMarks = questionNumber * marksPerQuestion;
+        $('#total_marks').val(totalMarks);
+        console.log('Calculated total marks:', totalMarks, 'Questions:', questionNumber, 'Marks per question:', marksPerQuestion);
+    }
+
+    // Add exam button click
+    $('#add-exam-btn').click(function(e) {
+        e.preventDefault();
+        console.log('Add exam button clicked');
+        $('#addExamModal').modal('show');
+        // Reset form and set default values
+        $('#add-exam-form')[0].reset();
+        $('#marks_per_question').val(1); // Set default value
+        $('#question_number').val(''); // Clear question number
+        $('#total_marks').val(0); // Set initial total marks
+        console.log('Form reset and initialized');
+    });
+
+    // Auto-calculate total marks when inputs change
+    $('#question_number, #marks_per_question').on('input change keyup', function() {
+        console.log('Input changed, recalculating total marks');
+        calculateTotalMarks();
+    });
+
+    // When modal is shown, ensure calculations work
+    $('#addExamModal').on('shown.bs.modal', function() {
+        console.log('Modal shown, setting up dynamic calculations');
+        calculateTotalMarks();
+    });
+
+    // Total exams button click
+    $('.total-exams-btn').click(function(e) {
+        e.preventDefault();
+        console.log('Total exams button clicked');
+        updateDashboardStats();
+        alert('Dashboard refreshed! Total exams: ' + $('#total-exams').text());
+    });
+
+    // Total questions button click
+    $('.total-questions-btn').click(function(e) {
+        e.preventDefault();
+        console.log('Total questions button clicked');
+        updateDashboardStats();
+        alert('Dashboard refreshed! Total questions: ' + $('#total-questions').text());
+    });
+
+    // Save exam button click
+    $('#save-exam-btn').click(function() {
+        console.log('Save exam button clicked');
+
+        // Validate form
+        var courseName = $('#course_name').val().trim();
+        var questionNumber = parseInt($('#question_number').val());
+        var marksPerQuestion = parseInt($('#marks_per_question').val());
+        var totalMarks = parseInt($('#total_marks').val());
+
+        if (!courseName) {
+            alert('Please enter an exam name');
+            $('#course_name').focus();
+            return;
+        }
+
+        if (!questionNumber || questionNumber < 1 || questionNumber > 100) {
+            alert('Please enter a valid number of questions (1-100)');
+            $('#question_number').focus();
+            return;
+        }
+
+        if (!marksPerQuestion || marksPerQuestion < 1 || marksPerQuestion > 10) {
+            alert('Please enter valid marks per question (1-10)');
+            $('#marks_per_question').focus();
+            return;
+        }
+
+        var formData = {
+            'course_name': courseName,
+            'question_number': questionNumber,
+            'marks_per_question': marksPerQuestion,
+            'total_marks': totalMarks,
+            'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+        };
+        console.log('Form data:', formData);
+
+        $.ajax({
+            url: '/teacher-add-exam/',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                console.log('Exam added successfully:', response);
+                $('#addExamModal').modal('hide');
+                $('#add-exam-form')[0].reset();
+                refreshExamsTable();
+                alert('Exam added successfully!');
+            },
+            error: function(xhr, status, error) {
+                console.log('Error adding exam:', xhr.responseText);
+                alert('Error adding exam: ' + xhr.responseText);
+            }
+        });
+    });
+
+    // Delete exam button click
+    $(document).on('click', '.delete-exam-btn', function() {
+        var examId = $(this).data('id');
+        console.log('Delete exam button clicked for exam ID:', examId);
+        if (confirm('Are you sure you want to delete this exam?')) {
+            $.ajax({
+                url: '/delete-exam/' + examId + '/',
+                type: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    refreshExamsTable();
+                    alert('Exam deleted successfully!');
+                },
+                error: function(xhr, status, error) {
+                    alert('Error deleting exam: ' + xhr.responseText);
+                }
+            });
+        }
+    });
+
+    // View questions button click
+    $(document).on('click', '.view-questions-btn', function() {
+        var examId = $(this).data('id');
+        console.log('View questions button clicked for exam ID:', examId);
+        window.location.href = '/see-question/' + examId + '/';
+    });
+
+    // Add questions button click
+    $(document).on('click', '.add-questions-btn', function() {
+        var examId = $(this).data('id');
+        console.log('Add questions button clicked for exam ID:', examId);
+        window.location.href = '/teacher-question/?course=' + examId;
+    });
+
+    // Update dashboard on page load
+    updateDashboardStats();
+
+    // Update dashboard every 30 seconds
+    setInterval(updateDashboardStats, 30000);
+});
+</script>
+
+{% endblock content %}

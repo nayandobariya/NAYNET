@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Include Social Header -->
+{% include 'account/social_header.html' %}
+
+<div class="social-container layout-3-col">
+  <div class="social-main-content">
+    <div class="network-page">
+      <!-- Tabs Container -->
+      <div class="network-tabs-container">
+        <div class="network-tabs">
+          <div class="network-tab active" onclick="switchNetworkTab('grow')">Grow</div>
+          <div class="network-tab" onclick="switchNetworkTab('catch-up')">Catch up</div>
+        </div>
+
+        <div class="manage-network-bar" onclick="switchNetworkTab('manage')">
+          <span>Manage my network</span>
+          <i class="fas fa-arrow-right"></i>
+        </div>
+      </div>
+
+      <!-- Grow Content (Suggestions) -->
+      <div id="grow-content" class="network-content-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Suggested for you</h5>
+        </div>
+        <div class="suggestions-grid" id="suggested-connections">
+          <div class="loading-spinner text-center p-5 w-100">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catch Up Content (Feed-like or specific items) -->
+      <div id="catch-up-content" class="network-content-section" style="display:none;">
+        <div class="social-card p-5 text-center">
+          <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+          <h4>Nothing to catch up on</h4>
+          <p class="text-muted">We'll let you know when there's something new from your network.</p>
+        </div>
+      </div>
+
+      <!-- Manage Network Content -->
+      <div id="manage-content" class="network-content-section" style="display:none;">
+        <div class="network-sections">
+          <div class="network-card">
+            <div class="card-header">
+              <h3>Connections (<span id="connections-count">0</span>)</h3>
+            </div>
+            <div class="network-list" id="connections-container"></div>
+          </div>
+          <div class="network-card">
+            <div class="card-header">
+              <h3>Following (<span id="following-count">0</span>)</h3>
+            </div>
+            <div class="network-list" id="following-container"></div>
+          </div>
+          <div class="network-card">
+            <div class="card-header">
+              <h3>Followers (<span id="followers-count">0</span>)</h3>
+            </div>
+            <div class="network-list" id="followers-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="social-sidebar">
+    <div class="sidebar-card">
+      <h4 class="sidebar-title"><i class="fas fa-search"></i> Find People</h4>
+      <div class="people-search">
+        <input type="text" id="people-search" placeholder="Search to grow network..." class="search-input">
+        <div id="people-results" class="search-results"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <h4 class="sidebar-title"><i class="fas fa-info-circle"></i> Network Info</h4>
+      <p class="small text-muted">Building your network helps you find the right opportunities and mentors.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Network Item Template (for Manage tab) -->
+<template id="network-item-template">
+  <div class="network-user-item" data-user-id="">
+    <div class="d-flex align-items-center">
+      <img src="" alt="Profile" class="network-avatar">
+      <div class="user-details">
+        <h6 class="mb-0 network-name"></h6>
+        <span class="network-role text-muted small"></span>
+      </div>
+    </div>
+    <div class="network-actions"></div>
+  </div>
+</template>
+
+
+
+<script>
+  function switchNetworkTab(tabName) {
+    // Update tabs UI
+    document.querySelectorAll('.network-tab').forEach(el => el.classList.remove('active'));
+    if (tabName !== 'manage') {
+      const activeTab = Array.from(document.querySelectorAll('.network-tab')).find(el => el.textContent.toLowerCase().includes(tabName.toLowerCase()));
+      if (activeTab) activeTab.classList.add('active');
+    }
+
+    // Hide all sections
+    document.querySelectorAll('.network-content-section').forEach(el => el.style.display = 'none');
+
+    // Show selected section
+    const sectionId = tabName === 'manage' ? 'manage-content' : (tabName + '-content');
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) targetSection.style.display = 'block';
+
+    if (tabName === 'manage') loadNetwork();
+    else if (tabName === 'grow') loadSuggestions();
+  }
+
+  function loadNetwork() {
+    fetch('/network/ajax/')
+      .then(response => response.json())
+      .then(data => {
+        renderNetworkSection('connections-container', 'connections-count', data.connections, 'message');
+        renderNetworkSection('following-container', 'following-count', data.following, 'unfollow');
+        renderNetworkSection('followers-container', 'followers-count', data.followers, 'follow-back');
+      })
+      .catch(error => console.error('Error loading network:', error));
+  }
+
+  function loadSuggestions() {
+    const container = document.getElementById('suggested-connections');
+    container.innerHTML = '<div class="text-center p-5 w-100"><i class="fas fa-circle-notch fa-spin fa-2x text-muted"></i></div>';
+
+    fetch('/connection-suggestions/ajax/')
+      .then(response => response.json())
+      .then(data => {
+        renderSuggestions(data.suggestions);
+      })
+      .catch(error => console.error('Error loading suggestions:', error));
+  }
+
+  function renderSuggestions(users) {
+    const container = document.getElementById('suggested-connections');
+    if (users.length === 0) {
+      container.innerHTML = '<div class="social-card p-5 text-center w-100"><p class="text-muted">No suggestions right now</p></div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    users.forEach(user => {
+      const card = document.createElement('div');
+      card.className = 'suggestion-card animate-fade-in';
+      card.innerHTML = `
+        <div class="card-bg-pattern">
+          <button class="card-close-btn" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <img src="${user.profile_picture || '/static/images/person_1.jpg'}" class="suggestion-card-avatar">
+        <div class="suggestion-card-info">
+          <div class="suggestion-card-name" onclick="window.location.href='/profile/${user.id}/'">${user.name}</div>
+          <div class="suggestion-card-role">${user.role || 'Member'}</div>
+          <button class="btn-follow-outline" onclick="toggleFollow(${user.id}, true)">+ Follow</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderNetworkSection(containerId, countId, users, actionType) {
+    const container = document.getElementById(containerId);
+    const countSpan = document.getElementById(countId);
+    countSpan.textContent = users.length;
+
+    if (users.length === 0) {
+      container.innerHTML = '<p class="text-center text-muted p-3">No items yet.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    users.forEach(user => {
+      const template = document.getElementById('network-item-template');
+      const clone = template.content.cloneNode(true);
+      const item = clone.querySelector('.network-user-item');
+
+      item.setAttribute('data-user-id', user.id);
+      item.querySelector('.network-avatar').src = user.profile_picture || '/static/images/person_1.jpg';
+      item.querySelector('.network-name').textContent = user.name;
+      item.querySelector('.network-role').textContent = user.role || 'Member';
+
+      const actions = item.querySelector('.network-actions');
+      if (actionType === 'message') {
+        actions.innerHTML = `<button class="btn btn-sm btn-social-primary" onclick="window.location.href='/messages/'">Message</button>`;
+      } else if (actionType === 'unfollow') {
+        actions.innerHTML = `<button class="btn btn-sm btn-outline-secondary" onclick="toggleFollow(${user.id})">Unfollow</button>`;
+      } else if (actionType === 'follow-back') {
+        actions.innerHTML = `<button class="btn btn-sm btn-social-primary" onclick="toggleFollow(${user.id})">Follow Back</button>`;
+      }
+
+      container.appendChild(item);
+    });
+  }
+
+  function toggleFollow(userId, isSuggestion = false) {
+    fetch(`/follow-unfollow/${userId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (isSuggestion) {
+            loadSuggestions();
+          } else {
+            loadNetwork();
+          }
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loadSuggestions();
+  });
+</script>
+
+{% endblock %}

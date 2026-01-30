@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h2 class="mb-4">People You May Know</h2>
+
+      <div class="mb-3">
+        <button class="btn btn-outline-primary" onclick="loadSuggestions()">Refresh Suggestions</button>
+      </div>
+
+      <div id="suggestions-container">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Suggestion Item Template -->
+<template id="suggestion-template">
+  <div class="card mb-3 suggestion-card" data-user-id="">
+    <div class="card-body d-flex align-items-center">
+      <img src="" alt="Profile" class="rounded-circle mr-3 suggestion-avatar" style="width: 60px; height: 60px;">
+      <div class="flex-grow-1">
+        <h5 class="mb-1 suggestion-name"></h5>
+        <p class="mb-1 text-muted suggestion-role"></p>
+      </div>
+      <button class="btn btn-primary connect-btn">Connect</button>
+    </div>
+  </div>
+</template>
+
+<script>
+function loadSuggestions() {
+  const container = document.getElementById('suggestions-container');
+  container.innerHTML = `
+    <div class="text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+  `;
+
+  fetch('/account/connection-suggestions/ajax/')
+    .then(response => response.json())
+    .then(data => {
+      renderSuggestions(data.suggestions);
+    })
+    .catch(error => {
+      console.error('Error loading suggestions:', error);
+      container.innerHTML = '<div class="alert alert-danger">Error loading suggestions. Please try again.</div>';
+    });
+}
+
+function renderSuggestions(suggestions) {
+  const container = document.getElementById('suggestions-container');
+
+  if (suggestions.length === 0) {
+    container.innerHTML = `
+      <div class="card">
+        <div class="card-body text-center">
+          <p>No suggestions available at the moment.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  suggestions.forEach(suggestion => {
+    const template = document.getElementById('suggestion-template');
+    const clone = template.content.cloneNode(true);
+    const card = clone.querySelector('.suggestion-card');
+
+    card.setAttribute('data-user-id', suggestion.id);
+    card.querySelector('.suggestion-avatar').src = suggestion.profile_picture || '/static/images/person_1.jpg';
+    card.querySelector('.suggestion-name').textContent = suggestion.name;
+    card.querySelector('.suggestion-role').textContent = suggestion.role;
+
+    const connectBtn = card.querySelector('.connect-btn');
+    connectBtn.onclick = () => sendConnectionRequest(suggestion.id, connectBtn);
+
+    container.appendChild(card);
+  });
+}
+
+function sendConnectionRequest(userId, button) {
+  button.disabled = true;
+  button.textContent = 'Sending...';
+
+  fetch(`/account/send-invite/${userId}/`, {
+    method: 'GET',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => {
+    if (response.redirected) {
+      // Success - redirect happened
+      button.textContent = 'Request Sent';
+      button.className = 'btn btn-success';
+    } else {
+      throw new Error('Request failed');
+    }
+  })
+  .catch(error => {
+    console.error('Error sending connection request:', error);
+    button.disabled = false;
+    button.textContent = 'Connect';
+    alert('Error sending connection request. Please try again.');
+  });
+}
+
+// Load suggestions on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadSuggestions();
+});
+</script>
+
+{% endblock %}

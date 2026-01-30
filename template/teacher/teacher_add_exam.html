@@ -1,0 +1,161 @@
+{% extends 'teacher/teacherbase.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+        a:link {
+            text-decoration: none;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .success-message {
+            color: green;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .loading {
+            display: none;
+            color: blue;
+        }
+    </style>
+</head>
+
+<div class="container">
+    <h2 style="text-align:center; color:blue; margin-bottom: 30px;">ADD Exam</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" autocomplete="off" id="examForm" style="max-width: 600px; margin: 0 auto;">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_course_name">Exam Name *</label>
+            {% render_field courseForm.course_name class="form-control" placeholder="e.g., Java Programming Test" %}
+            {% if courseForm.course_name.errors %}
+                <div class="error-message">{{ courseForm.course_name.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_question_number">Total Questions *</label>
+            {% render_field courseForm.question_number class="form-control" placeholder="e.g., 10" min="1" max="100" %}
+            {% if courseForm.question_number.errors %}
+                <div class="error-message">{{ courseForm.question_number.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_marks_per_question">Marks per Question *</label>
+            {% render_field courseForm.marks_per_question class="form-control" placeholder="e.g., 1" min="1" max="10" %}
+            {% if courseForm.marks_per_question.errors %}
+                <div class="error-message">{{ courseForm.marks_per_question.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_total_marks">Total Marks (Auto-calculated)</label>
+            {% render_field courseForm.total_marks class="form-control" readonly="true" %}
+            <small class="form-text text-muted">Calculated as: Questions × Marks per Question</small>
+            {% if courseForm.total_marks.errors %}
+                <div class="error-message">{{ courseForm.total_marks.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        {% if courseForm.non_field_errors %}
+            <div class="error-message">{{ courseForm.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                <span class="loading" id="loadingSpinner">Creating Exam...</span>
+                <span id="submitText">ADD EXAM</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg ml-2" onclick="resetForm()">RESET</button>
+        </div>
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Dynamic calculation of total marks
+    function calculateTotalMarks() {
+        var questions = parseInt($('#id_question_number').val()) || 0;
+        var marksPerQuestion = parseInt($('#id_marks_per_question').val()) || 0;
+        var totalMarks = questions * marksPerQuestion;
+        $('#id_total_marks').val(totalMarks);
+    }
+
+    // Calculate on input change
+    $('#id_question_number, #id_marks_per_question').on('input', function() {
+        calculateTotalMarks();
+    });
+
+    // Form validation
+    $('#examForm').on('submit', function(e) {
+        var isValid = true;
+        var courseName = $('#id_course_name').val().trim();
+        var questionNumber = $('#id_question_number').val();
+        var marksPerQuestion = $('#id_marks_per_question').val();
+
+        // Clear previous errors
+        $('.error-message').remove();
+
+        if (!courseName) {
+            $('#id_course_name').after('<div class="error-message">Exam name is required.</div>');
+            isValid = false;
+        }
+
+        if (!questionNumber || questionNumber < 1) {
+            $('#id_question_number').after('<div class="error-message">Total questions must be at least 1.</div>');
+            isValid = false;
+        }
+
+        if (!marksPerQuestion || marksPerQuestion < 1 || marksPerQuestion > 10) {
+            $('#id_marks_per_question').after('<div class="error-message">Marks per question must be between 1 and 10.</div>');
+            isValid = false;
+        }
+
+        if (isValid) {
+            $('#submitBtn').prop('disabled', true);
+            $('#submitText').hide();
+            $('#loadingSpinner').show();
+        } else {
+            e.preventDefault();
+        }
+    });
+
+    // Reset form function
+    window.resetForm = function() {
+        $('#examForm')[0].reset();
+        $('#id_total_marks').val('');
+        $('.error-message').remove();
+        $('#submitBtn').prop('disabled', false);
+        $('#submitText').show();
+        $('#loadingSpinner').hide();
+    };
+
+    // Initial calculation
+    calculateTotalMarks();
+});
+</script>
+
+{% endblock content %}

@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<section class="section-hero overlay inner-page bg-image" style="background-image: url('{% static 'images/hero_1.jpg' %}');"
+    id="home-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <h1 class="text-white font-weight-bold">All Applicants </h1>
+                <div class="custom-breadcrumbs">
+                    <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+                    <a href="{% url 'jobapp:dashboard' %}">Dashboard</a> <span class="mx-2 slash">/</span>
+                    <span class="text-white"><strong>All Applicants </strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="site-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 mb-5">
+                <div class="card">
+                    <h5 class="card-header text-center mb-5"> All Applicants </h5>
+                    <div class="table-responsive">
+                        <table class="table text-center">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Job Title</th>
+                                    <th>Applied Date</th>
+                                    <th>View </th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for applicant in all_applicants %}
+                        {{ applicant.get_total_applicant }}
+
+                                <tr>
+                                    <td class="text-center"><a href="">{{ applicant.user.get_full_name }}</a></td     >
+                                    <td>{{ applicant.job.title }}</td>
+                                    <td>{{ applicant.timestamp }}</td>
+                                    <td>
+                                        <a class="btn btn-info btn-sm" href="{% url 'jobapp:applicant-details' applicant.user.id applicant.job.id %}"
+                                                role="button">
+                                            Click
+                                        </a>
+                                    </td>
+
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+<section class="site-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 mb-5">
+                <div class="card">
+                    <h5 class="card-header text-center mb-5"> Top Score List - Interview Round 2 </h5>
+                    <div class="mb-3 text-center">
+                        <a href="{% url 'jobapp:select-candidates' job.id %}" class="btn btn-primary btn-lg">
+                            <i class="fa fa-users"></i> Select Candidates for Round 2
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table text-center">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>CV Score</th>
+                                    <th>Exam Marks</th>
+                                    <th>Total Score</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in sorted_results %}
+                                <tr>
+                                    <td class="text-center">{{ result.name }}</td>
+                                    <td class="text-center">{{ result.score }}</td>
+                                    <td class="text-center">{{ result.marks }}</td>
+                                    <td class="text-center"><strong>{{ result.total_score }}</strong></td>
+                                    <td class="text-center">
+                                        {% if result.selected %}
+                                            <span class="badge badge-success">Selected for Round 2</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No applicants with scores found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Interview Round 2 Section -->
+{% if interview_round_2 %}
+<section class="site-section bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 mb-5">
+                <div class="card">
+                    <h5 class="card-header text-center mb-5"> Interview Round 2 - Live Sessions </h5>
+                    <div class="table-responsive">
+                        <table class="table text-center">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Interview Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in interview_sessions %}
+                                <tr>
+                                    <td class="text-center">{{ session.interview_selection.applicant.user.get_full_name }}</td>
+                                    <td class="text-center">
+                                        {% if session.scheduled_at %}
+                                            {{ session.scheduled_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Not scheduled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if session.completed %}
+                                            <span class="badge badge-success">Completed</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Scheduled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'jobapp:interview-session' session.session_id %}" class="btn btn-success btn-sm">
+                                            <i class="fa fa-video-camera"></i> Join Interview
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No interview sessions scheduled</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Include Social Header -->
+{% include 'account/social_header.html' %}
+
+<div class="social-container">
+  <div class="social-main-content">
+    <div class="messages-page">
+      <div class="messages-layout">
+        <!-- Conversations Sidebar -->
+        <div class="conversations-sidebar">
+          <div class="chat-header" style="border-right: none;">
+            <div class="chat-user-name" style="font-size: 18px;">Messaging</div>
+            <button class="btn btn-sm btn-link text-dark" onclick="openNewMessageModal()">
+              <i class="fas fa-edit"></i>
+            </button>
+          </div>
+
+          <div class="p-3">
+            <div class="search-container"
+              style="background: #efefef; border-radius: 8px; padding: 4px 12px; display: flex; align-items: center;">
+              <i class="fas fa-search text-muted mr-2"></i>
+              <input type="text" id="search-conversations" placeholder="Search chats..."
+                style="background: transparent; border: none; outline: none; font-size: 14px; width: 100%;">
+            </div>
+          </div>
+
+          <div class="conversations-list" id="conversations-list">
+            <!-- Conversations loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-interface" id="chat-interface">
+          <!-- Chat Header -->
+          <div class="chat-header" id="chat-header" style="display: none;">
+            <div class="chat-user-info" onclick="viewProfile()">
+              <img src="" alt="Profile" class="chat-user-avatar" id="chat-user-avatar">
+              <div class="chat-user-details">
+                <h4 class="chat-user-name" id="chat-user-name"></h4>
+                <span class="chat-user-status" id="chat-user-status"></span>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="btn btn-link text-dark"><i class="fas fa-phone-alt"></i></button>
+              <button class="btn btn-link text-dark mx-2"><i class="fas fa-video"></i></button>
+              <button class="btn btn-link text-dark" onclick="toggleChatMenu()"><i
+                  class="fas fa-info-circle"></i></button>
+            </div>
+          </div>
+
+          <!-- Messages Area -->
+          <div class="chat-messages" id="chat-messages">
+            <!-- Messages will be loaded here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-chat"
+            class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-5">
+            <div class="social-card p-5 border-0 shadow-none">
+              <div class="mb-4">
+                <i class="fab fa-instagram fa-4x text-muted"
+                  style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+              </div>
+              <h4>Your Direct Messages</h4>
+              <p class="text-muted">Send private photos and messages to a friend or group.</p>
+              <button class="btn btn-primary rounded-pill px-4" onclick="openNewMessageModal()">Send Message</button>
+            </div>
+          </div>
+
+          <!-- Composer -->
+          <div class="message-composer" id="message-composer" style="display: none;">
+            <form id="send-message-form">
+              {% csrf_token %}
+              <div class="composer-input">
+                <button type="button" class="btn btn-link text-dark p-0"><i class="far fa-smile fa-lg"></i></button>
+                <input type="text" id="message-content" placeholder="Message..." class="message-input" required
+                  autocomplete="off">
+                <button type="submit" class="send-btn" id="send-btn">Send</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar (Optional, maybe hide on direct chat pages) -->
+  <div class="social-sidebar">
+    <div class="sidebar-card">
+      <h4 class="sidebar-title"><i class="fas fa-circle text-success" style="font-size: 10px;"></i> Active Friends</h4>
+      <div id="online-users" class="online-users"></div>
+    </div>
+  </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal" id="new-message-modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>New Message</h3>
+      <button class="modal-close" onclick="closeNewMessageModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="recipient-search">
+        <input type="text" id="recipient-search" placeholder="Search for people..." class="search-input">
+        <div id="recipient-results" class="search-results"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Conversation Template -->
+<template id="conversation-template">
+  <div class="conversation-item" data-user-id="">
+    <div class="conversation-avatar">
+      <img src="" alt="Profile" class="conversation-user-avatar">
+      <div class="online-indicator" id="online-indicator"></div>
+    </div>
+    <div class="conversation-content">
+      <div class="conversation-header">
+        <h4 class="conversation-name"></h4>
+        <span class="conversation-time"></span>
+      </div>
+      <p class="conversation-last-message"></p>
+      <div class="conversation-meta">
+        <span class="unread-count" id="unread-count" style="display: none;"></span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Message Template -->
+<template id="message-template">
+  <div class="message" data-message-id="">
+    <div class="message-avatar">
+      <img src="" alt="Profile" class="message-user-avatar">
+    </div>
+    <div class="message-content">
+      <div class="message-bubble">
+        <p class="message-text"></p>
+        <div class="message-meta">
+          <span class="message-time"></span>
+          <div class="message-status">
+            <i class="fas fa-check"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Online User Template -->
+<template id="online-user-template">
+  <div class="online-user-item" data-user-id="">
+    <img src="" alt="Profile" class="online-user-avatar">
+    <div class="online-user-info">
+      <span class="online-user-name"></span>
+      <span class="online-user-role"></span>
+    </div>
+  </div>
+</template>
+
+<script>
+  // Enhanced Messages Page JavaScript
+  let currentChatUserId = null;
+  let messagePollingInterval = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loadConversations();
+    loadOnlineUsers();
+    setupEventListeners();
+
+    // Start polling
+    messagePollingInterval = setInterval(() => {
+      if (currentChatUserId) pollNewMessages(currentChatUserId);
+      loadConversations();
+    }, 5000);
+  });
+
+  function setupEventListeners() {
+    const searchInput = document.getElementById('search-conversations');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        filterConversations(this.value.trim());
+      });
+    }
+
+    const sendForm = document.getElementById('send-message-form');
+    if (sendForm) {
+      sendForm.addEventListener('submit', handleSendMessage);
+    }
+  }
+
+  function loadConversations() {
+    fetch('/messages/conversations/', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('conversations-list');
+        list.innerHTML = '';
+        if (data.conversations && data.conversations.length > 0) {
+          data.conversations.forEach(c => {
+            list.insertAdjacentHTML('beforeend', createConversationHTML(c));
+          });
+          // Restore active state
+          if (currentChatUserId) {
+            const activeItem = list.querySelector(`[data-user-id="${currentChatUserId}"]`);
+            if (activeItem) activeItem.classList.add('active');
+          }
+        } else {
+          list.innerHTML = '<div class="p-3 text-center text-muted">No conversations yet</div>';
+        }
+
+        // Update stats
+        if (document.getElementById('total-conversations'))
+          document.getElementById('total-conversations').textContent = data.conversations ? data.conversations.length : 0;
+      })
+      .catch(err => console.error(err));
+  }
+
+  function createConversationHTML(c) {
+    const isActive = currentChatUserId == c.user_id ? 'active' : '';
+    const onlineClass = c.is_online ? 'online' : '';
+
+    return `
+    <div class="conversation-item ${isActive}" data-user-id="${c.user_id}" onclick="openChat(${c.user_id})">
+      <div class="conversation-avatar">
+        <img src="${c.avatar || '/static/images/person_1.jpg'}" class="conversation-user-avatar">
+        <div class="online-indicator ${onlineClass}"></div>
+      </div>
+      <div class="conversation-content">
+        <div class="conversation-header">
+           <span class="conversation-name">${c.name}</span>
+           <span class="conversation-time">${c.last_message_time || ''}</span>
+        </div>
+        <p class="conversation-last-message">${c.last_message || 'Start chatting...'}</p>
+      </div>
+      ${c.unread_count > 0 ? `<div class="badge badge-danger ml-auto">${c.unread_count}</div>` : ''}
+    </div>
+  `;
+  }
+
+  function openChat(userId) {
+    currentChatUserId = userId;
+
+    // UI updates
+    document.getElementById('empty-chat').style.display = 'none';
+    document.getElementById('chat-interface').style.display = 'flex';
+    document.getElementById('chat-header').style.display = 'flex';
+    document.getElementById('message-composer').style.display = 'block';
+
+    // Active state
+    document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
+    const activeItem = document.querySelector(`.conversation-item[data-user-id="${userId}"]`);
+    if (activeItem) activeItem.classList.add('active');
+
+    // Load data
+    fetch(`/messages/chat/${userId}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('chat-user-avatar').src = data.avatar || '/static/images/person_1.jpg';
+        document.getElementById('chat-user-name').textContent = data.name;
+        document.getElementById('chat-user-status').textContent = data.is_online ? 'Active Now' : '';
+      });
+
+    loadMessages(userId);
+  }
+
+  function loadMessages(userId) {
+    fetch(`/messages/chat/${userId}/messages/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+        if (data.messages && data.messages.length > 0) {
+          data.messages.forEach(msg => {
+            container.insertAdjacentHTML('beforeend', createMessageHTML(msg));
+          });
+          container.scrollTop = container.scrollHeight;
+        } else {
+          container.innerHTML = '<div class="text-center p-5 text-muted">Say hello! 👋</div>';
+        }
+      });
+  }
+
+  function createMessageHTML(msg) {
+    const type = msg.is_sender ? 'sent' : 'received';
+    return `
+        <div class="message ${type}" data-id="${msg.id}">
+            <div class="message-bubble">
+                <div class="message-text">${msg.content}</div>
+                <span class="message-time">${msg.created_at_formatted}</span>
+            </div>
+        </div>
+    `;
+  }
+
+  function handleSendMessage(e) {
+    e.preventDefault();
+    if (!currentChatUserId) return;
+
+    const input = document.getElementById('message-content');
+    const content = input.value.trim();
+    if (!content) return;
+
+    const formData = new FormData();
+    formData.append('content', content);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    fetch(`/messages/send/${currentChatUserId}/`, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          input.value = '';
+          document.getElementById('chat-messages').insertAdjacentHTML('beforeend', createMessageHTML(data.message));
+          const container = document.getElementById('chat-messages');
+          container.scrollTop = container.scrollHeight;
+          loadConversations(); // refresh sidebar
+        }
+      });
+  }
+
+  function pollNewMessages(userId) {
+    const container = document.getElementById('chat-messages');
+    const lastMsg = container.querySelector('.message:last-child');
+    const lastId = lastMsg ? lastMsg.dataset.id : 0;
+
+    fetch(`/messages/poll/${userId}/?last_id=${lastId}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => res.json())
+      .then(data => {
+        if (data.messages && data.messages.length > 0) {
+          data.messages.forEach(msg => container.insertAdjacentHTML('beforeend', createMessageHTML(msg)));
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+  }
+
+  function loadOnlineUsers() {
+    fetch('/messages/online-users/', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(res => res.json())
+      .then(data => {
+        const div = document.getElementById('online-users');
+        if (div && data.users) {
+          div.innerHTML = '';
+          data.users.forEach(user => {
+            div.innerHTML += `
+                    <div class="d-flex align-items-center mb-2 pointer" onclick="openChat(${user.id})">
+                        <img src="${user.avatar || '/static/images/person_1.jpg'}" style="width:30px;height:30px;border-radius:50%;margin-right:8px;">
+                        <small>${user.name}</small>
+                        <span class="ml-auto text-success" style="font-size:8px;">●</span>
+                    </div>
+                `;
+          });
+        }
+      })
+      .catch(e => console.log(e));
+  }
+
+  function openNewMessageModal() {
+    document.getElementById('new-message-modal').style.display = 'flex';
+  }
+
+  function closeNewMessageModal() {
+    document.getElementById('new-message-modal').style.display = 'none';
+  }
+
+  function filterConversations(query) {
+    document.querySelectorAll('.conversation-item').forEach(item => {
+      const text = item.innerText.toLowerCase();
+      item.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+    });
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,382 @@
+{% extends 'teacher/teacherbase.html' %}
+
+{% block content %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style type="text/css">
+        a:link {
+            text-decoration: none;
+        }
+
+        .order-card {
+            color: rgb(255, 255, 255);
+        }
+
+        .bg-c-blue {
+            background: linear-gradient(45deg, #04868f, #06b6d4);
+        }
+
+        .bg-c-green {
+            background: linear-gradient(45deg, #4C51BF, #667eea);
+        }
+
+        .bg-c-yellow {
+            background: linear-gradient(45deg, #F56565, #f87171);
+        }
+
+        .bg-c-pink {
+            background: linear-gradient(45deg, #663a30, #92400e);
+        }
+
+        .bg-c-purple {
+            background: linear-gradient(45deg, #7c3aed, #a855f7);
+        }
+
+        .card {
+            -webkit-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: none;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            -webkit-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card .card-block {
+            padding: 25px;
+        }
+
+        .order-card i {
+            font-size: 28px;
+        }
+
+        .f-left {
+            float: left;
+        }
+
+        .f-right {
+            float: right;
+        }
+
+        .quick-action-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-card:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .quick-action-card i {
+            color: #007bff;
+            font-size: 24px;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stats-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .stats-change.positive {
+            color: #28a745;
+        }
+
+        .stats-change.negative {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center font-weight-bold text-primary">Teacher Dashboard</h1>
+            <p class="text-center text-muted">Manage your exams, questions, and monitor student progress</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card bg-c-green order-card">
+                <div class="card-block">
+                    <h6 class="m-b-20">Total Students</h6>
+                    <h2 class="text-right">
+                        <i class="fas fa-user-graduate f-left"></i>
+                        <span id="total-student">{{total_student}}</span>
+                    </h2>
+                    <div id="student-change" class="stats-change"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card bg-c-yellow order-card">
+                <div class="card-block">
+                    <h6 class="m-b-20">Total Exams</h6>
+                    <h2 class="text-right">
+                        <i class="fas fa-book f-left"></i>
+                        <span id="total-course">{{total_course}}</span>
+                    </h2>
+                    <div id="course-change" class="stats-change"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card bg-c-pink order-card">
+                <div class="card-block">
+                    <h6 class="m-b-20">Total Questions</h6>
+                    <h2 class="text-right">
+                        <i class="fas fa-question-circle f-left"></i>
+                        <span id="total-question">{{total_question}}</span>
+                    </h2>
+                    <div id="question-change" class="stats-change"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card bg-c-purple order-card">
+                <div class="card-block">
+                    <h6 class="m-b-20">Active Exams</h6>
+                    <h2 class="text-right">
+                        <i class="fas fa-play-circle f-left"></i>
+                        <span id="active-exams"><i class="loading-spinner"></i></span>
+                    </h2>
+                    <div id="active-change" class="stats-change"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">Quick Actions</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card quick-action-card" onclick="window.location.href='{% url 'jobapp:teacher-add-exam' %}'">
+                <div class="card-block text-center">
+                    <i class="fas fa-plus-circle mb-2"></i>
+                    <h6>Add New Exam</h6>
+                    <p class="text-muted small">Create a new exam with questions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card quick-action-card" onclick="window.location.href='{% url 'jobapp:teacher-view-exam' %}'">
+                <div class="card-block text-center">
+                    <i class="fas fa-list mb-2"></i>
+                    <h6>View All Exams</h6>
+                    <p class="text-muted small">Manage existing exams</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card quick-action-card" onclick="window.location.href='{% url 'jobapp:teacher-add-question' %}'">
+                <div class="card-block text-center">
+                    <i class="fas fa-edit mb-2"></i>
+                    <h6>Add Questions</h6>
+                    <p class="text-muted small">Create questions for exams</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card quick-action-card" onclick="window.location.href='{% url 'jobapp:teacher-view-question' %}'">
+                <div class="card-block text-center">
+                    <i class="fas fa-eye mb-2"></i>
+                    <h6>View Questions</h6>
+                    <p class="text-muted small">Review all questions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock mr-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recent-activity">
+                        <div class="text-center">
+                            <i class="loading-spinner"></i>
+                            <p>Loading recent activity...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refresh Button -->
+<button class="btn btn-primary refresh-btn" onclick="manualRefresh()" title="Refresh Dashboard">
+    <i class="fas fa-sync-alt"></i>
+</button>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    let previousData = {};
+
+    function updateDashboard() {
+        $.ajax({
+            url: '{% url "jobapp:teacher-dashboard" %}',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                // Update statistics with animations
+                animateValue('total-student', previousData.total_student || 0, data.total_student);
+                animateValue('total-course', previousData.total_course || 0, data.total_course);
+                animateValue('total-question', previousData.total_question || 0, data.total_question);
+
+                // Calculate active exams (assuming all courses are active for now)
+                $('#active-exams').html(data.total_course);
+
+                // Show changes
+                showChanges('student-change', previousData.total_student, data.total_student);
+                showChanges('course-change', previousData.total_course, data.total_course);
+                showChanges('question-change', previousData.total_question, data.total_question);
+
+                // Update recent activity
+                updateRecentActivity();
+
+                previousData = data;
+            },
+            error: function(xhr, status, error) {
+                console.log('Error updating dashboard:', error);
+                $('#recent-activity').html('<div class="alert alert-danger">Failed to load dashboard data. Please refresh the page.</div>');
+            }
+        });
+    }
+
+    function animateValue(id, start, end) {
+        if (start === end) return;
+
+        let current = start;
+        const increment = end > start ? 1 : -1;
+        const timer = setInterval(function() {
+            current += increment;
+            $('#' + id).text(current);
+            if (current === end) {
+                clearInterval(timer);
+            }
+        }, 50);
+    }
+
+    function showChanges(elementId, oldVal, newVal) {
+        if (oldVal === undefined) return;
+
+        const change = newVal - oldVal;
+        const element = $('#' + elementId);
+
+        if (change > 0) {
+            element.html('<i class="fas fa-arrow-up"></i> +' + change).addClass('positive').removeClass('negative');
+        } else if (change < 0) {
+            element.html('<i class="fas fa-arrow-down"></i> ' + change).addClass('negative').removeClass('positive');
+        } else {
+            element.html('No change').removeClass('positive negative');
+        };
+
+        // Hide after 5 seconds
+        setTimeout(function() { element.fadeOut(); }, 5000);
+    }
+
+    function updateRecentActivity() {
+        // Simulate recent activity (you can replace this with actual data from backend)
+        const activities = [
+            {icon: 'fas fa-plus-circle', text: 'New exam "Java Basics" added', time: '2 minutes ago'},
+            {icon: 'fas fa-edit', text: 'Question updated in "Python Quiz"', time: '15 minutes ago'},
+            {icon: 'fas fa-user-graduate', text: '5 new students registered', time: '1 hour ago'},
+            {icon: 'fas fa-play-circle', text: 'Exam "Data Structures" started by students', time: '2 hours ago'}
+        ];
+
+        let activityHtml = '<ul class="list-group list-group-flush">';
+        activities.forEach(activity => {
+            activityHtml += `
+                <li class="list-group-item d-flex align-items-center">
+                    <i class="${activity.icon} text-primary mr-3"></i>
+                    <div class="flex-grow-1">
+                        <span>${activity.text}</span>
+                        <small class="text-muted d-block">${activity.time}</small>
+                    </div>
+                </li>
+            `;
+        });
+        activityHtml += '</ul>';
+
+        $('#recent-activity').html(activityHtml);
+    }
+
+    function manualRefresh() {
+        const btn = $('.refresh-btn i');
+        btn.addClass('fa-spin');
+        updateDashboard();
+        setTimeout(() => btn.removeClass('fa-spin'), 1000);
+    }
+
+    // Initialize dashboard
+    updateDashboard();
+
+    // Update dashboard every 30 seconds
+    setInterval(updateDashboard, 30000);
+
+    // Update recent activity every 60 seconds
+    setInterval(updateRecentActivity, 60000);
+});
+</script>
+
+{% endblock content %}

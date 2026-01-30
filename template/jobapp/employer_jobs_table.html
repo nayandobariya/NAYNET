@@ -1,0 +1,200 @@
+{% load get_total_applicant %}
+
+<style>
+    .premium-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: none;
+    }
+
+    .premium-table thead th {
+        background: #2d3748;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1.2rem;
+        border: none;
+    }
+
+    .premium-table tbody tr {
+        transition: all 0.2s;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .premium-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .premium-table td {
+        vertical-align: middle !important;
+        padding: 1.2rem !important;
+        color: #4a5568;
+        font-size: 0.95rem;
+    }
+
+    .btn-action-group {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    .btn-premium-sm {
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.2s;
+        border: none;
+        min-width: 85px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-premium-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-premium-info {
+        background: #00acc1;
+        color: white;
+    }
+
+    .btn-premium-primary {
+        background: #5c6bc0;
+        color: white;
+    }
+
+    .btn-premium-success {
+        background: #66bb6a;
+        color: white;
+    }
+
+    .btn-premium-danger {
+        background: #ef5350;
+        color: white;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .applicant-badge-link {
+        text-decoration: none !important;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .applicant-count {
+        background: rgba(102, 187, 106, 0.1);
+        color: #2e7d32;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid rgba(102, 187, 106, 0.2);
+    }
+
+    .applicant-icon {
+        color: #66bb6a;
+        font-size: 1.1rem;
+    }
+</style>
+
+{% if jobs %}
+<div class="table-responsive">
+    <table class="table premium-table text-center mt-4">
+        <thead>
+            <tr>
+                <th class="text-left">Job Title</th>
+                <th>Posted Date</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Applicants</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr id="row_{{ job.id }}">
+                <td class="text-left font-weight-bold">
+                    <a href="{% url 'jobapp:single-job' job.id %}" style="color: #2d3748; text-decoration: none;">{{
+                        job.title }}</a>
+                </td>
+                <td>{{ job.timestamp | date:'M d, Y' }}</td>
+                <td>{{ job.last_date | date:'M d, Y' }}</td>
+                <td>
+                    {% if job.is_published %}
+                    <span class="status-badge badge-info">Published</span>
+                    {% else %}
+                    <span class="status-badge badge-danger">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% get_total_applicant total_applicants job as is_applicant %}
+                    {% if is_applicant %}
+                    <a href="{% url 'jobapp:applicants' job.id %}" class="applicant-badge-link">
+                        <i class="fa fa-users applicant-icon"></i>
+                        <span class="applicant-count">
+                            {{ is_applicant }} Applicant{{ is_applicant|pluralize }}
+                        </span>
+                    </a>
+                    {% else %}
+                    <span class="text-muted small">No applicants</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-action-group">
+                        <a class="btn-premium-sm btn-premium-info" href="{% url 'jobapp:edit-job' job.id %}">Edit</a>
+
+                        {% if not job.is_published %}
+                        <button
+                            onclick="call_sw_alert_func(`{% url 'jobapp:publish' job.id %}`, `{{ job.id }}`, `Confirm job publishing?`)"
+                            class="btn-premium-sm btn-premium-primary">Publish</button>
+                        {% else %}
+                        {% if not job.is_closed %}
+                        <span id="change_job_status_{{ job.id }}">
+                            <button
+                                onclick="call_sw_alert_func(`{% url 'jobapp:complete' job.id %}`, `{{ job.id }}`, `Mark this job as completed?`)"
+                                class="btn-premium-sm btn-premium-success">Make Close</button>
+                        </span>
+                        {% else %}
+                        <span class="btn-premium-sm btn-premium-success"
+                            style="opacity: 0.7; cursor: default;">Closed</span>
+                        {% endif %}
+                        {% endif %}
+
+                        <button
+                            onclick="call_sw_alert_func(`{% url 'jobapp:delete' job.id %}`, `{{ job.id }}`, `Permanently delete this post?`)"
+                            class="btn-premium-sm btn-premium-danger">Delete</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card p-5 text-center mt-5"
+    style="border-radius: 20px; border: 2px dashed #edf2f7; background: transparent;">
+    <h4 class="text-muted">No jobs posted yet</h4>
+    <p class="text-muted mb-4">Start by creating your first job opportunity.</p>
+    <div class="col-md-4 mx-auto">
+        <a href="{% url 'jobapp:create-job' %}" class="btn btn-primary btn-block"
+            style="border-radius: 12px; font-weight: 700;">Create New Job</a>
+    </div>
+</div>
+{% endif %}

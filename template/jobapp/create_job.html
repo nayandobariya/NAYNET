@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!-- HOME -->
+<section class="section-hero overlay inner-page bg-image" style="background-image: url('{% static 'images/hero_1.jpg' %}');" id="home-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-7">
+        <h1 class="text-white font-weight-bold">Post A Job</h1>
+        <div class="custom-breadcrumbs">
+          <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+          <a href="{% url 'jobapp:dashboard' %}">Dashboard</a> <span class="mx-2 slash">/</span>
+          <span class="text-white"><strong>Post a Job</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .premium-form-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    transition: all 0.3s ease;
+    animation: slideUp 0.6s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-group label {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.95rem;
+  }
+
+  .form-control {
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid #edf2f7;
+    transition: all 0.2s;
+    height: auto !important;
+    min-height: 50px;
+  }
+
+  .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  }
+
+  .section-header {
+    position: relative;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+  }
+
+  .section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 4px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+  }
+
+  .submit-btn {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    color: white;
+    width: 100%;
+    margin-top: 2rem;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    color: white;
+  }
+
+  /* Quill Editor Styles */
+  .ql-container {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  .ql-toolbar {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    background: #f8fafc;
+  }
+
+  .editor-container {
+    height: 250px;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<section class="site-section bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <form method="POST" id="job-form" class="premium-form-card">
+          {% csrf_token %}
+
+          <h3 class="section-header">Job Information</h3>
+
+          {% include 'messages.html' %}
+
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="{{ form.title.id_for_label }}">Job Title</label>
+              {{ form.title }}
+              {% if form.title.errors %}<small class="text-danger">{{ form.title.errors.0 }}</small>{% endif %}
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="{{ form.category.id_for_label }}">Category</label>
+              {{ form.category }}
+              {% if form.category.errors %}<small class="text-danger">{{ form.category.errors.0 }}</small>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="{{ form.location.id_for_label }}">Location</label>
+              {{ form.location }}
+              {% if form.location.errors %}<small class="text-danger">{{ form.location.errors.0 }}</small>{% endif %}
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="{{ form.job_type.id_for_label }}">Job Type</label>
+              <select name="job_type" class="form-control" id="id_job_type">
+                <option value="1">Full time</option>
+                <option value="2">Part time</option>
+                <option value="3">Internship</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="{{ form.salary.id_for_label }}">Salary Range</label>
+              {{ form.salary }}
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="{{ form.last_date.id_for_label }}">Application Deadline</label>
+              <input type="date" name="last_date" class="form-control" id="id_last_date" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}">Tags (Comma separated)</label>
+            {{ form.tags }}
+          </div>
+
+          <div class="form-group mt-4">
+            <label>Detailed Job Description (Notepad Editor)</label>
+            <div id="description-editor" class="editor-container"></div>
+            <input type="hidden" name="description" id="id_description">
+            {% if form.description.errors %}<small class="text-danger">{{ form.description.errors.0 }}</small>{% endif %}
+          </div>
+
+          <h3 class="section-header mt-5">Company Details</h3>
+
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="{{ form.company_name.id_for_label }}">Company Name</label>
+              {{ form.company_name }}
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="{{ form.url.id_for_label }}">Company Website</label>
+              {{ form.url }}
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <label>Company Description (Notepad Editor)</label>
+            <div id="company-description-editor" class="editor-container"></div>
+            <input type="hidden" name="company_description" id="id_company_description">
+          </div>
+
+          <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+              <button type="submit" class="submit-btn shadow-lg">
+                <i class="fas fa-paper-plane mr-2"></i> Post Job Application
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  var quillOptions = {
+    theme: 'snow',
+    placeholder: 'Compose your content here...',
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ 'header': [1, 2, 3, false] }],
+        ['clean']
+      ]
+    }
+  };
+
+  var descEditor = new Quill('#description-editor', quillOptions);
+  var compEditor = new Quill('#company-description-editor', quillOptions);
+
+  // Pre-fill if editing
+  if (document.getElementById('id_description').value) {
+    descEditor.root.innerHTML = document.getElementById('id_description').value;
+  }
+  if (document.getElementById('id_company_description').value) {
+    compEditor.root.innerHTML = document.getElementById('id_company_description').value;
+  }
+
+  document.getElementById('job-form').onsubmit = function () {
+    document.getElementById('id_description').value = descEditor.root.innerHTML;
+    document.getElementById('id_company_description').value = compEditor.root.innerHTML;
+  };
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

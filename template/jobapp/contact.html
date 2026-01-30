@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="section-hero overlay inner-page bg-image"
+    style="background-image: url('{% static 'images/hero_1.jpg' %}');" id="home-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <h1 class="text-white font-weight-bold">Contact Us</h1>
+                <div class="custom-breadcrumbs">
+                    <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+                    <span class="text-white"><strong>Contact Us</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .contact-section {
+        padding: 6rem 0;
+        background: #f8fafc;
+    }
+
+    .contact-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        padding: 3rem;
+        border: 1px solid #edf2f7;
+    }
+
+    .contact-info-item {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .contact-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .contact-text h5 {
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.2rem;
+    }
+
+    .contact-text p {
+        color: #718096;
+        margin: 0;
+    }
+
+    .form-control-premium {
+        background: #f8fafc;
+        border: 1px solid #edf2f7;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+    .form-control-premium:focus {
+        background: white;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .btn-send-premium {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .btn-send-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+</style>
+
+<section class="contact-section">
+    <div class="container">
+        {% include 'messages.html' %}
+        <div class="row">
+            <div class="col-lg-5 mb-5 mb-lg-0">
+                <div class="pr-lg-5">
+                    <h2 class="mb-4 font-weight-bold" style="color: #2d3748;">Get in Touch</h2>
+                    <p class="text-muted lead mb-5">Have a question or need assistance? Our team is here to help you
+                        navigate your journey.</p>
+
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h5>Our Office</h5>
+                            <p>123 Innovation Drive, Tech City, TC 54321</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h5>Phone Number</h5>
+                            <p>+99 9925410332</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h5>Email Address</h5>
+                            <p>support@naynet.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="contact-card">
+                    <form action="#" method="POST" id="contactForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="text-dark font-weight-bold">First Name</label>
+                                <input type="text" name="first_name" class="form-control-premium w-100"
+                                    placeholder="John" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="text-dark font-weight-bold">Last Name</label>
+                                <input type="text" name="last_name" class="form-control-premium w-100" placeholder="Doe"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="text-dark font-weight-bold">Email Address</label>
+                            <input type="email" name="email" class="form-control-premium w-100"
+                                placeholder="john@example.com" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="text-dark font-weight-bold">Subject</label>
+                            <input type="text" name="subject" class="form-control-premium w-100"
+                                placeholder="How can we help?" required>
+                        </div>
+                        <div class="mb-5">
+                            <label class="text-dark font-weight-bold">Message</label>
+                            <textarea name="message" class="form-control-premium w-100" rows="5"
+                                placeholder="Tell us more about your inquiry..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-send-premium">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

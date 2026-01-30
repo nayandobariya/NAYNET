@@ -1,0 +1,116 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}User Visits | Admin Panel{% endblock %}
+{% block page_title %}User Visits{% endblock %}
+
+{% block content %}
+<div class="card mb-4 fade-in">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-eye me-2"></i> User Visits</h4>
+        <div>
+            <!-- Filters could go here -->
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in" style="animation-delay: 0.1s;">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="py-3 ps-4" style="width: 80px;">ID</th>
+                        <th class="py-3">User</th>
+                        <th class="py-3">IP Address</th>
+                        <th class="py-3">Page</th>
+                        <th class="py-3">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in page_obj %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-muted">#{{ visit.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if visit.user %}
+                                <div class="avatar-circle me-2 bg-indigo-100 text-indigo-600 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 14px;">
+                                    {{ visit.user.get_full_name|slice:":1"|default:"U" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ visit.user.get_full_name }}</div>
+                                    <div class="small text-muted">{{ visit.user.email }}</div>
+                                </div>
+                                {% else %}
+                                <div class="avatar-circle me-2 bg-gray-100 text-gray-600 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 14px;">
+                                    <i class="fas fa-user-secret"></i>
+                                </div>
+                                <span class="fw-bold text-muted">Anonymous</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-blue-100 text-blue-600 border border-blue-200 font-monospace">{{
+                                visit.ip_address }}</span>
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 250px;">
+                                <i class="fas fa-link me-1 text-muted"></i> {{ visit.path }}
+                            </div>
+                        </td>
+                        <td class="text-muted">
+                            {{ visit.timestamp|date:"M d, Y H:i:s" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No visits recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item"><a
+                        class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

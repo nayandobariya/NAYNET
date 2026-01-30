@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="section-hero overlay inner-page bg-image" style="background-image: url('{% static " images/hero_1.jpg"
+    %}');" id="home-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <h1 class="text-white font-weight-bold">{{ page_title }}</h1>
+                <div class="custom-breadcrumbs">
+                    <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+                    <span class="text-white"><strong>{{ page_title }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .info-section {
+        padding: 5rem 0;
+        background: #fff;
+    }
+
+    .info-content {
+        max-width: 900px;
+        margin: 0 auto;
+        line-height: 1.8;
+        color: #4a5568;
+    }
+
+    .info-content h2,
+    .info-content h3 {
+        color: #2d3748;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 3.5rem;
+        border: 1px solid #edf2f7;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+    }
+
+    .accent-bg {
+        background: #89ba16;
+        color: white;
+        padding: 4rem 0;
+    }
+
+    .info-icon {
+        font-size: 2.5rem;
+        color: #89ba16;
+        margin-bottom: 1.5rem;
+    }
+
+    ul.info-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    ul.info-list li {
+        position: relative;
+        padding-left: 30px;
+        margin-bottom: 15px;
+    }
+
+    ul.info-list li::before {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        color: #89ba16;
+    }
+</style>
+
+<section class="info-section">
+    <div class="container">
+        <div class="info-content">
+            {% if page_type == 'about' %}
+            <div class="info-card">
+                <div class="info-icon">🏢</div>
+                <h2>About Us</h2>
+                <h4 class="font-weight-bold mb-3">Welcome to NayNat</h4>
+                <p>We are a technology-driven company committed to delivering innovative digital solutions for
+                    businesses worldwide. Our mission is to empower organizations with smart, scalable, and secure
+                    products that drive growth and efficiency.</p>
+                <p>Founded in 2026, NayNat has been working with startups, SMEs, and enterprises to build high-quality
+                    applications and platforms. We believe in transparency, integrity, and long-term partnerships.</p>
+            </div>
+            {% elif page_type == 'career' %}
+            <div class="info-card">
+                <div class="info-icon">💼</div>
+                <h2>Career</h2>
+                <h3>Join Our Team</h3>
+                <p>At NayNat, we are always looking for passionate, creative, and skilled professionals.</p>
+
+                <h4 class="font-weight-bold mt-4">Why Work With Us?</h4>
+                <ul class="info-list">
+                    <li>Friendly and professional work environment</li>
+                    <li>Career growth opportunities</li>
+                    <li>Flexible working hours</li>
+                    <li>Learning & development programs</li>
+                </ul>
+
+                <h4 class="font-weight-bold mt-4">Current Openings:</h4>
+                <ul class="info-list">
+                    <li>Software Developer</li>
+                    <li>UI/UX Designer</li>
+                    <li>Digital Marketing Executive</li>
+                    <li>Customer Support Associate</li>
+                </ul>
+
+                <div class="alert alert-success mt-5 p-4 rounded-lg">
+                    <i class="fas fa-paper-plane mr-2"></i> Send your resume to: <strong>careers@naynat.com</strong>
+                </div>
+            </div>
+            {% elif page_type == 'blog' %}
+            <div class="info-card">
+                <div class="info-icon">📝</div>
+                <h2>Blog</h2>
+                <h3>Latest Insights & Updates</h3>
+                <p>Stay updated with the latest trends in technology, business, and innovation.</p>
+
+                <h4 class="font-weight-bold mt-4">Recent Posts:</h4>
+                <div class="list-group list-group-flush mt-3">
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent px-0 py-4 border-bottom">
+                        <h5 class="font-weight-bold text-primary mb-1">How Digital Transformation Helps Businesses Grow
+                        </h5>
+                        <p class="mb-0 text-muted small">The impact of digitalization on modern enterprises.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent px-0 py-4 border-bottom">
+                        <h5 class="font-weight-bold text-primary mb-1">Top 5 Mobile App Development Trends</h5>
+                        <p class="mb-0 text-muted small">Stay ahead with the latest mobile technologies.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent px-0 py-4 border-bottom">
+                        <h5 class="font-weight-bold text-primary mb-1">Why User Experience Matters</h5>
+                        <p class="mb-0 text-muted small">Designing for the human element in software.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent px-0 py-4">
+                        <h5 class="font-weight-bold text-primary mb-1">Future of AI in Business</h5>
+                        <p class="mb-0 text-muted small">How machine learning is reshaping the corporate landscape.</p>
+                    </a>
+                </div>
+            </div>
+            {% elif page_type == 'resources' %}
+            <div class="info-card">
+                <div class="info-icon">📚</div>
+                <h2>Resources</h2>
+                <h3>Helpful Tools & Guides</h3>
+                <p>Explore our resources to learn and grow with us.</p>
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border rounded-xl text-center hover-shadow transition">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h5 class="font-weight-bold">Case Studies</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border rounded-xl text-center hover-shadow transition">
+                            <i class="fas fa-book-open fa-3x text-info mb-3"></i>
+                            <h5 class="font-weight-bold">Whitepapers</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border rounded-xl text-center hover-shadow transition">
+                            <i class="fas fa-play-circle fa-3x text-success mb-3"></i>
+                            <h5 class="font-weight-bold">Tutorials</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border rounded-xl text-center hover-shadow transition">
+                            <i class="fas fa-file-code fa-3x text-warning mb-3"></i>
+                            <h5 class="font-weight-bold">Product Documentation</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% elif page_type == 'privacy' %}
+            <div class="info-card">
+                <div class="info-icon">🔐</div>
+                <h2>Privacy Policy</h2>
+                <p>We respect your privacy. All personal data collected is used only to provide better services and
+                    improve user experience. We never sell your data to third parties.</p>
+                <p>Our commitment to security ensures that your information remains confidential and protected under
+                    industry-leading encryption standards.</p>
+            </div>
+            {% elif page_type == 'terms' %}
+            <div class="info-card">
+                <div class="info-icon">📜</div>
+                <h2>Terms of Service</h2>
+                <p>By using our website and services, you agree to follow our terms and conditions. We reserve the right
+                    to update these terms at any time without prior notice.</p>
+                <p>Professional conduct is required at all times while utilizing the NayNat platform for recruitment and
+                    career development.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-5 text-center">
+                <div class="info-card bg-light p-4">
+                    <div class="info-icon" style="font-size: 1.5rem;">🛠 Support</div>
+                    <h5 class="font-weight-bold">We’re Here to Help</h5>
+                    <p class="small text-muted mb-3">Our support team is available 24/7 to assist you.</p>
+                    <div class="d-md-flex justify-content-center">
+                        <div class="mx-3 mb-2"><i class="fas fa-envelope text-primary mr-2"></i> support@naynat.com
+                        </div>
+                        <div class="mx-3 mb-2"><i class="fas fa-phone text-primary mr-2"></i> +91-9925410332</div>
+                    </div>
+                    <div class="mt-2 small text-muted"><i class="fas fa-clock mr-2"></i> Monday – Friday, 9 AM – 6 PM
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

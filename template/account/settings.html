@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Include Social Header -->
+{% include 'account/social_header.html' %}
+
+<div class="social-container">
+    <div class="social-main-content">
+        <div class="settings-page">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </h1>
+            </div>
+
+            <div class="settings-sections">
+                <!-- Profile Privacy -->
+                <div class="settings-card">
+                    <h3><i class="fas fa-lock"></i> Privacy Settings</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Public Profile</label>
+                            <p>Allow everyone to see your posts and profile.</p>
+                        </div>
+                        <div class="setting-action">
+                            <input type="checkbox" checked class="toggle-switch">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Show Email</label>
+                            <p>Allow others to see your email address.</p>
+                        </div>
+                        <div class="setting-action">
+                            <input type="checkbox" class="toggle-switch">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="settings-card">
+                    <h3><i class="fas fa-bell"></i> Notification Preferences</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Email Notifications</label>
+                            <p>Receive updates via email.</p>
+                        </div>
+                        <div class="setting-action">
+                            <input type="checkbox" checked class="toggle-switch">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Browser Notifications</label>
+                            <p>Show push notifications in browser.</p>
+                        </div>
+                        <div class="setting-action">
+                            <input type="checkbox" checked class="toggle-switch">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="social-sidebar">
+        <div class="sidebar-card text-center">
+            <div class="mb-3 position-relative d-inline-block">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="Profile" class="user-avatar-large" id="sidebar-avatar">
+                {% else %}
+                <img src="{% static 'images/person_1.jpg' %}" alt="Profile" class="user-avatar-large"
+                    id="sidebar-avatar">
+                {% endif %}
+
+                <label for="avatar-upload" class="avatar-edit-overlay">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="avatar-upload" accept="image/*" style="display: none;"
+                    onchange="uploadProfilePicture(this)">
+            </div>
+            <h4>{{ user.get_full_name }}</h4>
+            <p class="text-muted small">Member since {{ user.date_joined|date:"M Y" }}</p>
+            <hr>
+            <a href="{% url 'account:logout' %}" class="btn btn-block btn-outline-danger">Logout</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .settings-page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid var(--social-border);
+        padding: 1.5rem;
+    }
+
+    .settings-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--social-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .setting-info label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .setting-info p {
+        font-size: 0.85rem;
+        color: var(--social-text-muted);
+        margin: 0;
+    }
+
+    .user-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--social-primary);
+    }
+
+    .avatar-edit-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: var(--social-primary);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px solid white;
+        transition: transform 0.2s;
+    }
+
+    .avatar-edit-overlay:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<script>
+    function uploadProfilePicture(input) {
+        if (input.files && input.files[0]) {
+            const formData = new FormData();
+            formData.append('profile_picture', input.files[0]);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            // Show loading state (optional: turn opacity down or show spinner)
+            const avatarImg = document.getElementById('sidebar-avatar');
+            avatarImg.style.opacity = '0.5';
+
+            fetch('{% url "account:update_profile_picture_ajax" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    avatarImg.style.opacity = '1';
+                    if (data.success) {
+                        // Update image source
+                        if (data.profile_picture) {
+                            avatarImg.src = data.profile_picture;
+                            // Also update header avatar if present
+                            const headerAvatar = document.querySelector('.user-nav-avatar');
+                            if (headerAvatar) headerAvatar.src = data.profile_picture;
+                        }
+
+                        // Show toast/alert
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'alert alert-success fixed-top m-3 shadow';
+                        messageDiv.style.zIndex = '9999';
+                        messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Profile picture updated!';
+                        document.body.appendChild(messageDiv);
+
+                        setTimeout(() => messageDiv.remove(), 3000);
+                    } else {
+                        alert('Error updating profile picture');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    avatarImg.style.opacity = '1';
+                    alert('An error occurred');
+                });
+        }
+    }
+</script>
+
+{% endblock %}

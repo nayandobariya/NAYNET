@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load get_pending_requests %}
+{% block content %}
+
+
+
+<div class="profile-container">
+  <!-- Profile Header -->
+  <div class="profile-header">
+    {% if user.profile_picture %}
+    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
+    {% else %}
+    <img src="{% static 'images/person_1.jpg' %}" alt="Profile Picture" class="profile-avatar">
+    {% endif %}
+    <h1 class="profile-name">{{ user.first_name }} {{ user.last_name }}</h1>
+    <p class="profile-role">Employee</p>
+  </div>
+
+  <div class="profile-content">
+    <!-- Main Content -->
+    <div class="profile-main">
+      <!-- Update Profile Form -->
+      <div class="profile-card">
+        <h3 class="card-title">Update Profile</h3>
+        {% include 'messages.html' %}
+
+        {% if form.errors %}
+        {% for field in form %}
+        {% for error in field.errors %}
+        <div class="alert alert-danger">
+          <strong>{{ error|escape }}</strong>
+        </div>
+        {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+          <strong>{{ error|escape }}</strong>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form id="profile-update-form" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-row">
+            {% for field in form %}
+            {% if field.name != 'profile_picture' %}
+            <div class="form-column">
+              {% if field.name == 'gender' %}
+              <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="gender" value="M" {% if field.value == "M" %} checked {% endif %}>
+                    Male
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="gender" value="F" {% if field.value == "F" %} checked {% endif %}>
+                    Female
+                  </label>
+                </div>
+              </div>
+              {% else %}
+              <div class="form-group">
+                <label class="form-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                <input type="{{ field.field.widget.input_type }}" class="form-control" name="{{ field.name }}"
+                  id="id_{{ field.name }}" value="{{ field.value }}"
+                  placeholder="{{ field.field.widget.attrs.placeholder }}">
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Profile Picture Upload -->
+          <div class="form-group">
+            <label class="form-label">Profile Picture</label>
+            <div class="upload-section">
+              <input type="file" name="profile_picture" id="profile-picture-upload" class="upload-input"
+                accept="image/*">
+              <label for="profile-picture-upload" class="upload-label">
+                <i class="fas fa-camera" style="font-size: 2em; display: block; margin-bottom: 10px;"></i>
+                Click to upload profile picture
+              </label>
+              <div id="upload-preview" class="upload-preview"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="update-profile-btn">Update Profile</button>
+          <div id="update-loading" style="display: none;" class="mt-2">
+            <div class="spinner-border spinner-border-sm" role="status">
+              <span class="sr-only">Loading...</span>
+            </div> Updating...
+          </div>
+        </form>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Profile picture preview
+  document.getElementById('profile-picture-upload').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('upload-preview');
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 50%;">`;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.innerHTML = '';
+    }
+  });
+
+  // AJAX profile update
+  document.getElementById('profile-update-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('update-profile-btn');
+    const loadingDiv = document.getElementById('update-loading');
+
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating...';
+    loadingDiv.style.display = 'block';
+
+    fetch('{% url "account:update_profile_ajax" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update profile header dynamically
+          updateProfileHeader(data);
+
+          // Show success message
+          showMessage('Profile updated successfully!', 'success');
+
+          // Reset loading state
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Update Profile';
+          loadingDiv.style.display = 'none';
+
+          // Clear file input preview
+          document.getElementById('upload-preview').innerHTML = '';
+          document.getElementById('profile-picture-upload').value = '';
+
+        } else {
+          // Show errors
+          let errorMessage = 'Error updating profile:';
+          if (data.errors) {
+            for (const field in data.errors) {
+              errorMessage += `\n${field}: ${data.errors[field].join(', ')}`;
+            }
+          } else if (data.message) {
+            errorMessage = data.message;
+          }
+          showMessage(errorMessage, 'danger');
+
+          // Reset loading state
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Update Profile';
+          loadingDiv.style.display = 'none';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showMessage('An error occurred while updating your profile.', 'danger');
+
+        // Reset loading state
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Profile';
+        loadingDiv.style.display = 'none';
+      });
+  });
+
+  function updateProfileHeader(data) {
+    // Update profile name
+    const profileName = document.querySelector('.profile-name');
+    if (profileName) {
+      profileName.textContent = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+    }
+
+    // Update profile picture if uploaded
+    if (data.profile_picture) {
+      const profileAvatar = document.querySelector('.profile-avatar');
+      if (profileAvatar) {
+        profileAvatar.src = data.profile_picture;
+      }
+    }
+
+    // Update form fields with new values
+    if (data.first_name) {
+      document.getElementById('id_first_name').value = data.first_name;
+    }
+    if (data.last_name) {
+      document.getElementById('id_last_name').value = data.last_name;
+    }
+    if (data.email) {
+      document.getElementById('id_email').value = data.email;
+    }
+  }
+
+  function showMessage(message, type) {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.alert');
+    existingMessages.forEach(msg => msg.remove());
+
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type}`;
+    messageDiv.innerHTML = `<strong>${message}</strong>`;
+
+    // Insert at the top of the form
+    const form = document.getElementById('profile-update-form');
+    form.parentNode.insertBefore(messageDiv, form);
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 5000);
+  }
+</script>
+
+{% endblock %}

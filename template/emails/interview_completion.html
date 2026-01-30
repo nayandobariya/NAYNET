@@ -1,0 +1,35 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}Interview Results{% endblock %}
+
+{% block content %}
+<p>Dear {{ user_name }},</p>
+
+<p>We are pleased to inform you that your interview for the <strong>{{ job_title }}</strong> position at <strong>{{
+        company_name }}</strong> has been completed.</p>
+
+<div class="info-box">
+    <h3>Interview Summary</h3>
+    <p><strong>Job Title:</strong> {{ job_title }}</p>
+    <p><strong>Company:</strong> {{ company_name }}</p>
+    <p><strong>Interviewer:</strong> {{ interviewer_name }}</p>
+    <p><strong>Completion Date:</strong> {{ completed_date }}</p>
+</div>
+
+<h3>Feedback from Interviewer</h3>
+<p style="font-style: italic; color: #5a5c69; background: #fffbe6; padding: 15px; border: 1px dashed #ffe58f;">
+    {{ feedback|default:"The interviewer enjoyed the conversation and is currently finalizing the review process." }}
+</p>
+
+<div class="info-box" style="background-color: #e6fffa; border-left-color: #38b2ac;">
+    <h3 style="color: #2c7a7b;">Final Salary Offer</h3>
+    <p style="font-size: 24px; font-weight: bold; color: #234e52;">{{ final_salary }}</p>
+</div>
+
+<p>Our recruitment team will review the final results and contact you regarding the next steps very soon.</p>
+
+<p>Best regards,<br>
+    <strong>{{ interviewer_name }}</strong><br>
+    {{ company_name }} Team
+</p>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Dashboard | Admin Panel{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Users Card -->
+    <div class="col-md-3">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.1s;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 class="card-value">{{ total_users }}</h2>
+                </div>
+                <div class="card-icon bg-indigo-100 text-indigo-600">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <a href="{% url 'jobapp:admin-users' %}"
+                class="btn btn-sm btn-light mt-3 text-indigo-600 fw-bold stretched-link">Manage Users</a>
+        </div>
+    </div>
+
+    <!-- Jobs Card -->
+    <div class="col-md-3">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.2s;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">Total Jobs</h5>
+                    <h2 class="card-value">{{ total_jobs }}</h2>
+                </div>
+                <div class="card-icon bg-green-100 text-green-600">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+                <span class="text-success fw-bold">{{ published_jobs }}</span> Published ·
+                <span class="text-danger fw-bold">{{ closed_jobs }}</span> Closed
+            </p>
+            <a href="{% url 'jobapp:admin-jobs' %}"
+                class="btn btn-sm btn-light mt-3 text-green-600 fw-bold stretched-link">Manage Jobs</a>
+        </div>
+    </div>
+
+    <!-- Applicants Card -->
+    <div class="col-md-3">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.3s;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">Applicants</h5>
+                    <h2 class="card-value">{{ total_applicants }}</h2>
+                </div>
+                <div class="card-icon bg-blue-100 text-blue-600">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+            </div>
+            <a href="{% url 'jobapp:admin-applicants' %}"
+                class="btn btn-sm btn-light mt-3 text-blue-600 fw-bold stretched-link">View Applicants</a>
+        </div>
+    </div>
+
+    <!-- Categories Card -->
+    <div class="col-md-3">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.4s;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">Categories</h5>
+                    <h2 class="card-value">{{ total_categories }}</h2>
+                </div>
+                <div class="card-icon bg-yellow-100 text-yellow-600">
+                    <i class="fas fa-tags"></i>
+                </div>
+            </div>
+            <a href="{% url 'jobapp:admin-categories' %}"
+                class="btn btn-sm btn-light mt-3 text-yellow-600 fw-bold stretched-link">Manage Categories</a>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.5s;">
+            <h5 class="card-title mb-4">Platform Overview</h5>
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card p-4 h-100 fade-in" style="animation-delay: 0.6s;">
+            <h5 class="card-title mb-4">User Distribution</h5>
+            <div class="chart-container" style="height: 250px; position: relative;">
+                <canvas id="userChart"></canvas>
+            </div>
+            <div class="mt-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="fas fa-user-graduate me-2 text-primary"></i>Students</span>
+                    <span class="fw-bold">{{ total_students }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted"><i class="fas fa-chalkboard-teacher me-2 text-info"></i>Teachers</span>
+                    <span class="fw-bold">{{ total_teachers }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Data passed from Django view
+    const stats = JSON.parse('{{ stats_json|escapejs }}');
+
+    // User Distribution Chart (Doughnut)
+    const ctxUser = document.getElementById('userChart').getContext('2d');
+    new Chart(ctxUser, {
+        type: 'doughnut',
+        data: {
+            labels: ['Students', 'Teachers'],
+            datasets: [{
+                data: [stats.students, stats.teachers],
+                backgroundColor: ['#4f46e5', '#3b82f6'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Main Overview Chart (Bar)
+    const ctxMain = document.getElementById('mainChart').getContext('2d');
+    new Chart(ctxMain, {
+        type: 'bar',
+        data: {
+            labels: ['Published Jobs', 'Closed Jobs', 'Applicants'],
+            datasets: [{
+                label: 'Count',
+                data: [stats.published, stats.closed, stats.applicants],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)', // Green for published
+                    'rgba(239, 68, 68, 0.8)',  // Red for closed
+                    'rgba(59, 130, 246, 0.8)'  // Blue for applicants
+                ],
+                borderRadius: 6,
+                barThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

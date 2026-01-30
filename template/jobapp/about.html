@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="section-hero overlay inner-page bg-image" id="home-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <h1 class="text-white font-weight-bold">About Us</h1>
+                <div class="custom-breadcrumbs">
+                    <a href="{% url 'jobapp:home' %}">Home</a> <span class="mx-2 slash">/</span>
+                    <span class="text-white"><strong>About Us</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .about-section {
+        padding: 6rem 0;
+        background: #fff;
+    }
+
+    .premium-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        padding: 3rem;
+        border: 1px solid #edf2f7;
+        transition: transform 0.3s;
+    }
+
+    .premium-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .stat-box {
+        text-align: center;
+        padding: 2rem;
+        background: #f8fafc;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #667eea;
+        display: block;
+    }
+
+    .stat-label {
+        color: #718096;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+    }
+
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    #home-section {
+        background-image: url('{% static "images/hero_1.jpg" %}');
+    }
+
+    @media (max-width: 991.98px) {
+        .stat-box {
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .premium-card {
+            padding: 2rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .about-section {
+            padding: 4rem 0;
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<section class="about-section">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="premium-card">
+                    <div class="icon-box">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h2 class="mb-4 font-weight-bold" style="color: #2d3748;">Our Mission</h2>
+                    <p class="text-muted lead mb-4">We are on a mission to bridge the gap between talented individuals
+                        and world-class organizations using cutting-edge technology and human-centric design.</p>
+                    <p class="text-muted">NayNet is more than just a job portal; it's a career ecosystem where we use
+                        NLP and AI to assess skills and match candidates with the right opportunities, ensuring a
+                        perfect fit for both sides.</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stat-box">
+                            <span class="stat-number">{{ total_candidates }}</span>
+                            <span class="stat-label">Active Talents</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-box">
+                            <span class="stat-number">{{ total_jobs }}</span>
+                            <span class="stat-label">Live Jobs</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-box">
+                            <span class="stat-number">{{ total_companies }}</span>
+                            <span class="stat-label">Partner Companies</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-box">
+                            <span class="stat-number">98%</span>
+                            <span class="stat-label">Success Rate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="icon-box mx-auto">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4 class="font-weight-bold">Smart Analysis</h4>
+                    <p class="text-muted">Our AI-powered resume analysis helps you understand your market value and
+                        improves your visibility.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="icon-box mx-auto">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="font-weight-bold">Secure Path</h4>
+                    <p class="text-muted">Your data security is our priority. We ensure a safe and transparent
+                        recruitment process for everyone.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="icon-box mx-auto">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h4 class="font-weight-bold">Human Touch</h4>
+                    <p class="text-muted">Behind the technology, we are a team of passionate experts dedicated to your
+                        career success.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

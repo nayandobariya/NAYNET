@@ -1,0 +1,62 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Manage Categories | Admin Panel{% endblock %}
+{% block page_title %}Manage Categories{% endblock %}
+
+{% block content %}
+<div class="card mb-4 fade-in">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-tags me-2"></i> Category List</h4>
+        <div>
+            <a href="{% url 'jobapp:admin-category-create' %}" class="btn btn-primary me-2"><i class="fas fa-plus"></i>
+                Create Category</a>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in" style="animation-delay: 0.1s;">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="py-3 ps-4" style="width: 100px;">ID</th>
+                        <th class="py-3">Name</th>
+                        <th class="py-3 text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-muted">#{{ category.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2 bg-yellow-100 text-yellow-600 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 14px;">
+                                    <i class="fas fa-tag"></i>
+                                </div>
+                                <span class="fw-bold text-dark">{{ category.name }}</span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'jobapp:admin-category-edit' category.id %}"
+                                    class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'jobapp:admin-category-delete' category.id %}"
+                                    class="btn btn-sm btn-outline-danger" title="Delete"><i
+                                        class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">No categories found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

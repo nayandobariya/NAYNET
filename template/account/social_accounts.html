@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Social Accounts</h1>
+{% if social_accounts %}
+<ul>
+{% for account in social_accounts %}
+<li>{{ account.provider }} - {{ account.uid }}
+<form method="post" action="{% url 'account:disconnect_social' account.id %}">
+{% csrf_token %}
+<button type="submit">Disconnect</button>
+</form>
+</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>No social accounts connected.</p>
+{% endif %}
+{% endblock %}

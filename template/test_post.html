@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Post Creation</title>
+</head>
+
+<body>
+    <h1>Test Post Creation</h1>
+
+    <form id="test-form">
+        {% csrf_token %}
+        <div>
+            <label>Content:</label><br>
+            <textarea name="content" id="content">Test post content</textarea>
+        </div>
+        <div>
+            <label>Post Type:</label><br>
+            <select name="post_type" id="post_type">
+                <option value="photo">Photo</option>
+                <option value="video">Video</option>
+                <option value="article">Article</option>
+                <option value="event">Event</option>
+            </select>
+        </div>
+        <div>
+            <label>Image:</label><br>
+            <input type="file" name="image" id="image" accept="image/*">
+        </div>
+        <br>
+        <button type="button" onclick="testPost()">Test Create Post</button>
+    </form>
+
+    <h2>Response:</h2>
+    <pre id="response"></pre>
+
+    <h2>Console Log:</h2>
+    <pre id="console-log"></pre>
+
+    <script>
+        function log(msg) {
+            const consoleLog = document.getElementById('console-log');
+            consoleLog.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        function testPost() {
+            log('Starting test...');
+
+            const form = document.getElementById('test-form');
+            const formData = new FormData(form);
+
+            log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                log(`  ${key}: ${value}`);
+            }
+
+            fetch('/account/posts/create/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+                .then(response => {
+                    log(`Response status: ${response.status}`);
+                    log(`Response OK: ${response.ok}`);
+                    return response.json();
+                })
+                .then(data => {
+                    log('Response data received');
+                    document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+
+                    if (data.success) {
+                        log('✓ SUCCESS! Post created with ID: ' + data.post.id);
+                    } else {
+                        log('✗ FAILED: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    log('✗ ERROR: ' + error.message);
+                    log('Error stack: ' + error.stack);
+                    document.getElementById('response').textContent = 'ERROR: ' + error.message;
+                });
+        }
+    </script>
+</body>
+
+</html>

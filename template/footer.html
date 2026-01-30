@@ -1,0 +1,137 @@
+{% load static %}
+<style>
+  /* Premium Responsive Footer Fixes */
+  .site-footer {
+    padding: 5rem 0 2rem 0 !important;
+    background: #222 !important;
+    /* Slightly darker for better contrast */
+  }
+
+  .site-footer h3 {
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    margin-bottom: 2rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Small size (Mobile - stacked) */
+  @media (max-width: 575.98px) {
+    .site-footer {
+      text-align: center;
+      padding: 3rem 0 !important;
+    }
+
+    .site-footer .footer-profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .footer-social {
+      justify-content: center;
+      display: flex;
+    }
+  }
+
+  /* Mid size (Tablet - 2 per row) */
+  @media (min-width: 576px) and (max-width: 991.98px) {
+    .footer-col {
+      margin-bottom: 3rem;
+    }
+  }
+
+  /* Large size (Desktop - 4 per row) */
+  @media (min-width: 992px) {
+    .site-footer .row>div {
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .site-footer .row>div:last-child {
+      border-right: none;
+    }
+  }
+
+  .footer-link-list li a {
+    transition: 0.3s;
+    display: inline-block;
+  }
+
+  .footer-link-list li a:hover {
+    padding-left: 5px;
+    color: #89ba16 !important;
+  }
+</style>
+
+<footer class="site-footer" id="footer-section">
+  <a href="#top" class="smoothscroll scroll-top">
+    <span class="icon-keyboard_arrow_up"></span>
+  </a>
+
+  <div class="container">
+    <div class="row mb-5">
+      <!-- Column 1: Stacked on Mobile, Half on Tablet, Quarter on Desktop -->
+      <div class="col-12 col-sm-6 col-lg-3 mb-5 mb-lg-0 footer-col">
+        <h3>Founder & CTO</h3>
+        <div class="footer-profile mb-3">
+          <img src="{% static 'images/nayan_dobariya.jpg' %}" alt="Nayan Dobariya" class="img-fluid rounded-circle mb-3"
+            style="width: 100px; height: 100px; object-fit: cover; border: 3px solid rgba(255,255,255,0.2);">
+          <h4 class="text-white h6 mb-0">Nayan Dobariya</h4>
+          <p class="small text-muted mb-0">Co-founder & CTO, NayNat</p>
+        </div>
+        <p class="small">Visionary leader driving innovation through AI to revolutionize recruitment.</p>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="col-12 col-sm-6 col-lg-3 mb-5 mb-lg-0 footer-col">
+        <h3>Category</h3>
+        <ul class="list-unstyled footer-link-list">
+          <li><a href="{% url 'jobapp:job-list' %}?category=Web+Design">Web Design</a></li>
+          <li><a href="{% url 'jobapp:job-list' %}?category=Graphic+Design">Graphic Design</a></li>
+          <li><a href="{% url 'jobapp:job-list' %}?category=Web+Developers">Web Developers</a></li>
+          <li><a href="{% url 'jobapp:job-list' %}?category=Python">Python</a></li>
+          <li><a href="{% url 'jobapp:job-list' %}?category=HTML5">HTML5</a></li>
+          <li><a href="{% url 'jobapp:job-list' %}?category=CSS3">CSS3</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3 -->
+      <div class="col-12 col-sm-6 col-lg-3 mb-5 mb-lg-0 footer-col">
+        <h3>Company</h3>
+        <ul class="list-unstyled footer-link-list">
+          <li><a href="{% url 'jobapp:company-about' %}">About Us</a></li>
+          <li><a href="{% url 'jobapp:careers' %}">Career</a></li>
+          <li><a href="{% url 'jobapp:blog' %}">Blog</a></li>
+          <li><a href="{% url 'jobapp:resources' %}">Resources</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 4 -->
+      <div class="col-12 col-sm-6 col-lg-3 mb-0 footer-col">
+        <h3>Support</h3>
+        <ul class="list-unstyled footer-link-list">
+          <li><a href="{% url 'jobapp:contact' %}">Support</a></li>
+          <li><a href="{% url 'jobapp:privacy' %}">Privacy Policy</a></li>
+          <li><a href="{% url 'jobapp:terms' %}">Terms of Service</a></li>
+        </ul>
+        <div class="footer-social mt-4">
+          <a href="#"><span class="icon-facebook"></span></a>
+          <a href="#"><span class="icon-twitter"></span></a>
+          <a href="#"><span class="icon-instagram"></span></a>
+          <a href="#"><span class="icon-linkedin"></span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- COPYRIGHT SECTION -->
+    <div class="row text-center pt-5 border-top">
+      <div class="col-12">
+        <p class="copyright">
+          <small>
+            NayNat developed by <strong>Nayan Dobariya</strong> &copy; 2026. All rights reserved.
+          </small>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

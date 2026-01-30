@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading"><i class="fas fa-info-circle"></i> Custom Admin Panel Available</h4>
+                <p>Access the modern admin dashboard with enhanced UI and analytics.</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="{% url 'jobapp:admin-dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Go to Custom Admin Dashboard
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{{ block.super }}
+{% endblock %}

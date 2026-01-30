@@ -1,0 +1,90 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Manage Teachers | Admin Panel{% endblock %}
+{% block page_title %}Manage Teachers{% endblock %}
+
+{% block content %}
+<div class="card mb-4 fade-in">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i> Manage Teachers</h4>
+        <div>
+            <a href="{% url 'jobapp:admin-teacher-create' %}" class="btn btn-primary me-2"><i class="fas fa-plus"></i>
+                Create Teacher</a>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in" style="animation-delay: 0.1s;">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="py-3">Teacher</th>
+                        <th class="py-3">Contact</th>
+                        <th class="py-3">Address</th>
+                        <th class="py-3">Salary</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2 bg-indigo-100 text-indigo-600 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 14px;">
+                                    {{ teacher.user.get_full_name|slice:":1"|default:"T" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ teacher.user.get_full_name }}</div>
+                                    <div class="small text-muted">{{ teacher.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fas fa-phone-alt me-2 text-secondary" style="font-size: 0.8rem;"></i> {{
+                                teacher.mobile|default:"-" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 150px;"
+                                title="{{ teacher.address|default:'-' }}">
+                                {{ teacher.address|default:"-" }}
+                            </div>
+                        </td>
+                        <td class="fw-bold text-success">${{ teacher.salary|default:"0" }}</td>
+                        <td class="text-center">
+                            {% if teacher.status == 'active' %}
+                            <span class="badge bg-green-100 text-green-600 border border-green-200">Active</span>
+                            {% elif teacher.status == 'inactive' %}
+                            <span class="badge bg-gray-100 text-gray-600 border border-gray-200">Inactive</span>
+                            {% else %}
+                            <span class="badge bg-yellow-100 text-yellow-600 border border-yellow-200">{{
+                                teacher.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'jobapp:admin-teacher-edit' teacher.pk %}"
+                                    class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'jobapp:admin-teacher-delete' teacher.pk %}"
+                                    class="btn btn-sm btn-outline-danger" title="Delete"><i
+                                        class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No teachers found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

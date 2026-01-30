@@ -1,0 +1,297 @@
+<div id="overlayer"></div>
+<div class="loader">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+
+
+<div class="site-wrap">
+
+  <div class="site-mobile-menu site-navbar-target">
+    <div class="site-mobile-menu-header">
+      <div class="site-mobile-menu-close mt-3">
+        <span class="icon-close2 js-menu-toggle"></span>
+      </div>
+    </div>
+    <div class="site-mobile-menu-body"></div>
+  </div> <!-- .site-mobile-menu -->
+
+
+  <!-- NAVBAR -->
+  <header class="site-navbar mt-3">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="site-logo"><a href="{% url 'jobapp:home' %}">NayNet</a></div>
+        <nav class="site-navigation">
+          <ul class="site-menu js-clone-nav d-none d-xl-block ml-0 pl-0">
+            <li><a href="{% url 'jobapp:home' %}" class="nav-link">Home</a></li>
+            <li><a href="{% url 'jobapp:about' %}" class="nav-link">About</a></li>
+            <li><a href="{% url 'jobapp:job-list' %}" class="nav-link">Job Listings</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'account:posts' %}" class="nav-link"><span class="icon-users mr-1"></span>Social
+                Network</a></li>
+            {% endif %}
+            <li><a href="{% url 'jobapp:contact' %}" class="nav-link">Contact</a></li>
+          </ul>
+        </nav>
+        <div class="right-cta-menu text-right d-flex aligin-items-center col-6">
+          <div class="ml-auto">
+            <div class="site-navigation fix">
+              <ul class="site-menu js-clone-nav d-none d-xl-block ml-0 pl-0">
+
+                {% if user.is_authenticated and user.role == 'employer' %}
+                <a href="{% url 'jobapp:create-job' %}"
+                  class="js-clone-nav pr-3 btn btn-outline-white border-width-2 d-none d-lg-inline-block"><span
+                    class="mr-2 icon-add"></span>Publish Job</a>
+
+                <a href="{% url 'jobapp:teacher-dashboard' %}"
+                  class="js-clone-nav pr-3 btn btn-outline-white border-width-2 d-none d-lg-inline-block"><span
+                    class="mr-2 icon-add"></span>Job Exam Dashboard</a>
+                {% if user.is_staff %}
+                <a href="{% url 'jobapp:admin-dashboard' %}"
+                  class="js-clone-nav pr-3 btn btn-outline-white border-width-2 d-none d-lg-inline-block"><span
+                    class="mr-2 icon-settings"></span>Admin Panel</a>
+                {% endif %}
+                <li class="pr-3 has-children">
+                  <a>Dashboard</a>
+                  <ul class="dropdown">
+                    <li><a href="{% url 'jobapp:dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'account:logout' %}">Logout</a></li>
+                  </ul>
+                </li>
+
+                {% elif user.is_authenticated %}
+
+                <li class="pr-3 has-children">
+                  <a>Settings</a>
+                  <ul class="dropdown">
+                    <li><a href="{% url 'account:edit-profile' user.id %}">Update Profile</a></li>
+                  </ul>
+                </li>
+                <a href="{% url 'jobapp:student-dashboard' %}" arget="_blank" rel="noopener"
+                  class="js-clone-nav pr-3 btn btn-outline-white border-width-2 d-none d-lg-inline-block"><span
+                    class="mr-2 icon-add"></span>Job Exam Dashboard</a>
+                <li class="pr-3 has-children">
+                  <a>Dashboard</a>
+                  <ul class="dropdown">
+                    <li><a href="{% url 'jobapp:dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'account:logout' %}">Logout</a></li>
+                  </ul>
+                </li>
+                <!-- <a href="{% url 'account:logout' %}"
+                class="btn btn-primary border-width-2 d-none d-lg-inline-block"><span
+                  class="mr-2 icon-lock_outline"></span>Log Out</a> -->
+                {% else %}
+
+                <li class="pr-3 has-children">
+                  <a>Register</a>
+                  <ul class="dropdown">
+                    <li><a href="{% url 'account:employer-registration' %}">Employer</a></li>
+                    <li><a href="{% url 'account:employee-registration' %}">Employee</a></li>
+                  </ul>
+                </li>
+
+                <a href="{% url 'account:login' %}"
+                  class="js-clone-nav btn btn-primary border-width-2 d-none d-lg-inline-block ov-fix"><span
+                    class="mr-2 icon-lock_outline"></span>Log In</a>
+                <a href="/admin/"
+                  class="js-clone-nav btn btn-secondary border-width-2 d-none d-lg-inline-block ov-fix"><span
+                    class="mr-2 icon-settings"></span>Admin</a>
+                {% endif %}
+              </ul>
+            </div>
+
+            <a href="#" class="site-menu-toggle js-menu-toggle d-inline-block d-xl-none mt-lg-2 ml-3"><span
+                class="icon-menu h3 m-0 p-0 mt-2"></span></a>
+          </div>
+        </div>
+  </header>
+
+  <script>
+    // Global search functionality
+    let searchTimeout;
+    document.getElementById('global-search').addEventListener('input', function (e) {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        document.getElementById('search-results').style.display = 'none';
+        return;
+      }
+
+      searchTimeout = setTimeout(() => {
+        fetch(`/account/search-users/?q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            showSearchResults(data.users);
+          })
+          .catch(error => console.error('Search error:', error));
+      }, 300);
+    });
+
+    function showSearchResults(users) {
+      const resultsDiv = document.getElementById('search-results');
+
+      if (users.length === 0) {
+        resultsDiv.style.display = 'none';
+        return;
+      }
+
+      let html = '<div class="search-results-list">';
+      users.forEach(user => {
+        html += `
+      <div class="search-result-item" onclick="viewProfile(${user.id})">
+        <img src="${user.profile_picture || '/static/images/person_1.jpg'}" alt="Profile" class="search-avatar">
+        <div class="search-info">
+          <div class="search-name">${user.name}</div>
+          <div class="search-role">${user.role}</div>
+        </div>
+      </div>
+    `;
+      });
+      html += '</div>';
+
+      resultsDiv.innerHTML = html;
+      resultsDiv.style.display = 'block';
+    }
+
+    function viewProfile(userId) {
+      // Redirect to user profile or open modal
+      window.location.href = `/account/profile/${userId}/`; // Assuming you have a profile view
+    }
+
+    // Notification functionality
+    function loadNotifications() {
+      fetch('/account/notifications/')
+        .then(response => response.json())
+        .then(data => {
+          updateNotificationCounts(data);
+        })
+        .catch(error => console.error('Error loading notifications:', error));
+    }
+
+    function updateNotificationCounts(data) {
+      const badge = document.getElementById('notification-badge');
+      const messagesCount = document.getElementById('unread-messages-count');
+      const totalNotifications = data.unread_messages + data.pending_requests;
+
+      if (totalNotifications > 0) {
+        badge.textContent = totalNotifications;
+        badge.style.display = 'inline';
+      } else {
+        badge.style.display = 'none';
+      }
+
+      if (data.unread_messages > 0) {
+        messagesCount.textContent = data.unread_messages;
+        messagesCount.style.display = 'inline';
+      } else {
+        messagesCount.style.display = 'none';
+      }
+    }
+
+    // Notification dropdown toggle
+    document.querySelector('.notification-link').addEventListener('click', function (e) {
+      e.preventDefault();
+      const dropdown = document.getElementById('notification-dropdown');
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.search-container')) {
+        document.getElementById('search-results').style.display = 'none';
+      }
+      if (!e.target.closest('.notification-item')) {
+        document.getElementById('notification-dropdown').style.display = 'none';
+      }
+    });
+
+    // Load notifications on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      loadNotifications();
+      // Refresh notifications every 30 seconds
+      setInterval(loadNotifications, 30000);
+    });
+  </script>
+
+  <style>
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-result-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .search-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .search-info {
+      flex-grow: 1;
+    }
+
+    .search-name {
+      font-weight: bold;
+    }
+
+    .search-role {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .notification-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      width: 300px;
+      max-height: 400px;
+    }
+
+    .notification-header {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notification-body {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .notification-badge {
+      background: red;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.8em;
+      margin-left: 5px;
+    }
+  </style>

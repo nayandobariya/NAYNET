@@ -1,0 +1,350 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- HOME -->
+<section class="home-section section-hero overlay bg-image" id="home-section">
+
+  <div class="container">
+    <div class="row align-items-center justify-content-center">
+      <div class="col-md-12">
+        <div class="mb-5 text-center">
+          <h1 class="text-white font-weight-bold hero-heading">Find Your Next Career Move</h1>
+          <p class="text-white opacity-8 shadow-sm hero-subheading">Connecting ambitious talent with world-class
+            companies through smart matching.</p>
+        </div>
+        <form method="GET" action="{% url 'jobapp:search_result' %}" class="search-jobs-form">
+          {% include 'jobapp/search.html' %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <a href="#next" class="scroll-button smoothscroll">
+    <span class="icon-keyboard_arrow_down"></span>
+  </a>
+</section>
+
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  /* Responsive Hero Heading */
+  .hero-heading {
+    font-size: clamp(2rem, 8vw, 3.5rem) !important;
+    letter-spacing: -1px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-subheading {
+    font-size: clamp(1rem, 3vw, 1.2rem) !important;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .stat-card-premium {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 1.2rem;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  @media (min-width: 768px) {
+    .stat-card-premium {
+      padding: 2rem;
+    }
+  }
+
+  .stat-card-premium:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .premium-job-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  @media (min-width: 768px) {
+    .premium-job-card {
+      padding: 2rem;
+    }
+  }
+
+  .premium-job-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+  }
+
+  .card-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-gradient);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    color: white;
+    font-size: 1.2rem;
+  }
+
+  .premium-badge {
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-fulltime {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+  }
+
+  .badge-parttime {
+    background: rgba(245, 101, 101, 0.1);
+    color: #f56565;
+  }
+
+  .badge-intern {
+    background: rgba(72, 187, 120, 0.1);
+    color: #48bb78;
+  }
+
+  /* Responsive Fix for CTA section */
+  .cta-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .cta-btns {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  /* Background Images */
+  #home-section,
+  .section-counter,
+  .cta-section {
+    background-image: url('{% static "images/hero_1.jpg" %}');
+  }
+</style>
+
+<section class="section-counter py-5 bg-image overlay-primary fixed overlay" id="next"
+  style="padding: 4rem 0 !important;">
+  <div class="container">
+    <div class="row mb-5 justify-content-center">
+      <div class="col-md-7 text-center">
+        <h2 class="section-title mb-4 text-white font-weight-bold" style="font-size: 2.5rem;">The Ecosystem in Numbers
+        </h2>
+        <p class="lead text-white opacity-8">Empowering connections between the world's most innovative companies and
+          ambitious talent across the globe.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-6 col-md-3 mb-4 mb-lg-0">
+        <div class="stat-card-premium">
+          <strong class="number text-white d-block mb-2" style="font-size: 2.5rem;"
+            data-number="{{ total_candidates }}">0</strong>
+          <span class="text-white opacity-8">Active Candidates</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 mb-4 mb-lg-0">
+        <div class="stat-card-premium">
+          <strong class="number text-white d-block mb-2" style="font-size: 2.5rem;"
+            data-number="{{ total_jobs }}">0</strong>
+          <span class="text-white opacity-8">Jobs Posted</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 mb-4 mb-lg-0">
+        <div class="stat-card-premium">
+          <strong class="number text-white d-block mb-2" style="font-size: 2.5rem;"
+            data-number="{{ total_completed_jobs }}">0</strong>
+          <span class="text-white opacity-8">Placements Made</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 mb-4 mb-lg-0">
+        <div class="stat-card-premium">
+          <strong class="number text-white d-block mb-2" style="font-size: 2.5rem;"
+            data-number="{{ total_companies }}">0</strong>
+          <span class="text-white opacity-8">Partner Companies</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ajax_listing_paginattion" class="site-section bg-light">
+  <div class="container">
+    {% if page_obj %}
+    <div class="row mb-5 justify-content-center">
+      <div class="col-md-7 text-center">
+        <h2 class="section-title mb-2 font-weight-bold" style="color: #2d3748;">Featured Opportunities</h2>
+        <p class="text-muted">Hand-picked roles from top employers looking for talent like you.</p>
+      </div>
+    </div>
+
+    <div id="job" class="row">
+      {% for job in page_obj %}
+      <div class="col-md-6 col-lg-4 mb-4">
+        <a href="{% url 'jobapp:single-job' job.id %}" style="text-decoration: none;">
+          <div class="premium-job-card">
+            <div class="card-icon-wrapper">
+              <i class="fas fa-briefcase"></i>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #2d3748; margin-bottom: 0.5rem;">{{ job.title }}
+            </h3>
+            <p style="color: #718096; font-size: 0.9rem; margin-bottom: 1.5rem;">
+              <i class="fas fa-building mr-1"></i> {{ job.company_name }} <br>
+              <i class="fas fa-map-marker-alt mr-1"></i> {{ job.location }}
+            </p>
+            <div class="mt-auto d-flex justify-content-between align-items-center">
+              {% if job.job_type == '1' %}
+              <span class="premium-badge badge-fulltime">Full Time</span>
+              {% elif job.job_type == '2'%}
+              <span class="premium-badge badge-parttime">Part Time</span>
+              {% else %}
+              <span class="premium-badge badge-intern">Internship</span>
+              {% endif %}
+              <span style="font-size: 0.85rem; color: #a0aec0;">{{ job.timestamp|timesince }} ago</span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="row mt-5 justify-content-center">
+      <div class="col-auto">
+        {% include 'jobapp/paginator.html' %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="py-5 bg-image overlay-primary fixed overlay cta-section" style="padding: 4rem 0 !important;">
+  <div class="container">
+    <div class="row align-items-center justify-content-center text-center">
+      <div class="col-md-8">
+        {% if user.is_authenticated and user.role == "employer" %}
+        <h2 class="text-white mb-3 font-weight-bold" style="font-size: 2rem;">Ready to find your next great hire?</h2>
+        <p class="mb-4 text-white opacity-8">Streamline your recruitment process with our intelligent talent assessment
+          tools.</p>
+        <a href="{% url 'jobapp:create-job' %}" class="btn btn-warning btn-lg px-5"
+          style="border-radius: 12px; font-weight: 700;">Post a Job Opportunity</a>
+        {% elif user.role == "employee" %}
+        <h2 class="text-white mb-3 font-weight-bold" style="font-size: 2rem;">Take the next step in your career</h2>
+        <p class="mb-4 text-white opacity-8">Hundreds of roles are waiting for someone with your unique skill set.</p>
+        <a href="{% url 'jobapp:job-list' %}" class="btn btn-warning btn-lg px-5"
+          style="border-radius: 12px; font-weight: 700;">Explore All Jobs</a>
+        {% else %}
+        <h2 class="text-white mb-3 font-weight-bold" style="font-size: 2rem;">Start your journey with Naynet</h2>
+        <p class="mb-4 text-white opacity-8">Join thousands of professionals and employers already using our platform.
+        </p>
+        <div class="cta-btns">
+          <a href="{% url 'account:employee-registration' %}" class="btn btn-warning btn-lg px-5 shadow"
+            style="border-radius: 12px; font-weight: 700; width: 100%; max-width: 280px;">Join as Candidate</a>
+          <a href="{% url 'account:employer-registration' %}" class="btn btn-outline-white btn-lg px-5"
+            style="border-radius: 12px; font-weight: 600; width: 100%; max-width: 280px;">Join as Employer</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $("#ajax_listing_paginattion").delegate("a#ajax_paginator", "click", function (event) {
+    event.preventDefault();
+    let joblist = '';
+    let next_paging = '';
+    let prev_paging = '';
+    let page_navigator = '';
+    let page_ref = $(this).attr('href');
+    let page_number = page_ref.split('page=')[1];
+
+    $.ajax({
+      type: "GET",
+      url: "{% url 'jobapp:home' %}",
+      data: { page: page_number },
+      success: function (response) {
+        $('#job').fadeOut(200, function () {
+          $(this).html('');
+          response.job_lists.map(function (job) {
+            let badgeClass = job.job_type == '1' ? 'badge-fulltime' : (job.job_type == '2' ? 'badge-parttime' : 'badge-intern');
+            let typeText = job.job_type == '1' ? 'Full Time' : (job.job_type == '2' ? 'Part Time' : 'Internship');
+
+            joblist += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                          <a href="/job/${job.id}/" style="text-decoration: none;">
+                            <div class="premium-job-card">
+                              <div class="card-icon-wrapper">
+                                <i class="fas fa-briefcase"></i>
+                              </div>
+                              <h3 style="font-size: 1.25rem; font-weight: 700; color: #2d3748; margin-bottom: 0.5rem;">${job.title}</h3>
+                              <p style="color: #718096; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                                <i class="fas fa-building mr-1"></i> ${job.company_name} <br>
+                                <i class="fas fa-map-marker-alt mr-1"></i> ${job.location}
+                              </p>
+                              <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="premium-badge ${badgeClass}">${typeText}</span>
+                                <span style="font-size: 0.85rem; color: #a0aec0;">Just now</span>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                    `;
+          });
+          $(this).html(joblist).fadeIn(300);
+        });
+
+        if (response.next_page_number) {
+          next_paging = `<a id="ajax_paginator" class="next" href="?page=${response.next_page_number}">Next</a>`;
+        }
+        $('#next_page').html(next_paging);
+
+        if (response.prev_page_number) {
+          prev_paging = `<a id="ajax_paginator" href="?page=${response.prev_page_number}" class="prev">Prev</a>`;
+        }
+        $('#prev_page').html(prev_paging);
+
+        page_navigator = `Showing ${response.current_page_no} of ${response.no_of_page} Pages`;
+        $('#page_navigator').html(page_navigator);
+
+        $('.active').removeClass('active');
+        $('.ajax_paginator_' + response.current_page_no).addClass('active');
+      },
+      error: function () {
+        alert('Error updating job listings');
+      }
+    });
+  });
+</script>
+{% endblock %}
