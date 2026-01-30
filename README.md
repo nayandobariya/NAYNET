@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Job Portal Django WebApp: Resume Analysis & Scoring with NLP and ML
 
 [![Django](https://img.shields.io/badge/Django-4.2.27-green.svg)](https://djangoproject.com/)
@@ -598,3 +599,6 @@ For support and questions:
 ---
 
 **Made with ❤️ by the Job Portal Development Team**
+=======
+# NAYNET
+>>>>>>> da9cc4e1a4201546f287c64ff6595413f0416365
